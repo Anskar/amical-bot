@@ -128,7 +128,7 @@ class Plantilles():
                 print missatge
         except:
             missatge = u"Aquesta plantilla no té pàgina d'ús'"
-        return missatge
+            return missatge
 
     def ordena_diccionari(self, dicc):
         print u'\nDiccionari ordenat:'
