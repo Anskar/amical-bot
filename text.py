@@ -21,15 +21,15 @@
 #  MA 02110-1301, USA.
 #
 #
+
+# Mòduls de l'anskar-bot
 from registre import Registre
 from apertium import Traductor
 from enllacos import Enllacos
 from ref import Ref
+
+#mòduls de python
 import wikipedia
-import httplib, urllib2, urllib
-import json
-from BeautifulSoup import BeautifulSoup
-import requests
 import time
 
 class Text(Traductor, Enllacos):
