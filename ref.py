@@ -24,6 +24,7 @@
 
 class Ref():
 
+<<<<<<< HEAD
     def cerca_referencies(self,text, par=0):
         """Cerca <ref i les substitueix en el text.
         Es marquen amb l'etiqueta REFR"""
@@ -31,6 +32,15 @@ class Ref():
 
         while text.find('<ref') != -1:
             inici = text.find('<ref')
+=======
+    def referencies(self,text, inici=0, par=0):
+        """Cerca <ref i les substitueix en el text. Es marquen amb l'etiqueta
+        REFR"""
+        print u'*** REFERÈNCIES ***'
+
+        while text.find('<ref',inici) != -1:
+            inici = text.find('<ref', inici)
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
             final = text.find('</ref',inici)
             if text.find('<ref',inici+4,final) != -1:
                 final = text.find('>',inici +3)
@@ -42,6 +52,7 @@ class Ref():
             ref = text[inici:final]
             print ref
             self.llista_refs.append(ref)
+<<<<<<< HEAD
             text = text.replace(ref, 'REFR%i' %(par))
             context = text[inici-20:final+20]
             ref = [ref,context]
@@ -83,6 +94,15 @@ class Ref():
             par +=1
         return text
 
+=======
+            context = text[inici-20:final+20]
+            ref = [ref,context]
+            self.refs['REFR%i' %(par)] = ref
+            par += 1
+            inici = final
+
+        return 0
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
 
 if __name__ == '__main__':
     main()

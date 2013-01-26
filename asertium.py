@@ -29,17 +29,17 @@ import sys
 class Traductor:
 
     def traductor(self, text):
-        original = open('original.txt', 'w')
+        original = open('original.html', 'w')
         original.write(text)
-        original.close()
+        original.close
         if self.idioma_original == 'en':
-            text_trad = subprocess.Popen(['apertium en-ca original.txt traduccio.txt'], shell=True)
+            text_trad = subprocess.Popen(['apertium en-ca original.html traduccio.html'], shell=True)
         if self.idioma_original == 'es':
-            text_trad = subprocess.Popen(['apertium es-ca original.txt traduccio.txt'], shell=True)
+            text_trad = subprocess.Popen(['apertium es-ca original.html traduccio.html'], shell=True)
         if self.idioma_original == 'fr':
-            text_trad = subprocess.Popen(['apertium fr-ca original.txt traduccio.txt'], shell=True)
+            text_trad = subprocess.Popen(['apertium fr-ca original.html traduccio.html'], shell=True)
         if self.idioma_original == 'pt':
-            text_trad = subprocess.Popen(['apertium pt-ca original.txt traduccio.txt'], shell=True)
+            text_trad = subprocess.Popen(['apertium pt-ca original.html traduccio.html'], shell=True)
 
 if __name__ == '__main__':
     app = Traductor()

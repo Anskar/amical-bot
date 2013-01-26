@@ -21,20 +21,32 @@
 #  MA 02110-1301, USA.
 #
 #
+<<<<<<< HEAD
+=======
+
+# Mòduls de l'anskar-bot
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
 from registre import Registre
 from apertium import Traductor
 from enllacos import Enllacos
 from ref import Ref
+<<<<<<< HEAD
 import wikipedia
 import httplib, urllib2, urllib
 import json
 from BeautifulSoup import BeautifulSoup
 import requests
+=======
+
+#mòduls de python
+import wikipedia
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
 import time
 
 class Text(Traductor, Enllacos):
 
     def canviar_text(self, text):
+<<<<<<< HEAD
         """Gestiona el text de forma que crida al processament de codi wiki
         en aquest ordre:
         1.- Plantilles. Són substituïdes per REFP
@@ -53,6 +65,17 @@ class Text(Traductor, Enllacos):
         text = text.encode('utf-8')
         print text
         raw_input('Seguim?')
+=======
+        """Gestiona el text de forma que crida la cerca d'enllaços i la cerca de plantilles'"""
+        print u'*** TEXT ***'
+        inici = 0
+        count = 1
+        text = self.cerca_plantilles(text)
+        self.cerca_enllacos(text)
+        self.referencies(text)
+#        self.ordena_diccionari(self.refs)
+        text = text.encode('utf-8')
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
         inici = text.find('\n==')
         capitol = text[:inici]
         self.traductor(capitol)
@@ -79,5 +102,8 @@ class Text(Traductor, Enllacos):
 #            prec = raw_input('Vols veure el text traduit?\n[S]/n : ')
 #            if prec != 'n':
 #                print text_traduit
+<<<<<<< HEAD
         print text_traduit
         return text_traduit
+=======
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546

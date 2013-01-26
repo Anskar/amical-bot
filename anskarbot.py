@@ -73,7 +73,10 @@ class Amical(Plantilles,Text, Traductor,Ref):
         self.ordena = { 'en' : u'DEFAULTSORT',
                          'es' : u'ORDENAR',
                          'fr' : u'DEFAULTSORT'}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
     def inici(self):
         peticions = 1
         arxiu = open(u'passos.txt', 'w')

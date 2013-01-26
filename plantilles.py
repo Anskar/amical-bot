@@ -27,6 +27,7 @@ import wikipedia
 
 class Plantilles():
 
+<<<<<<< HEAD
     def cerca_plantilles(self, text, inici=0, par= 0, contador=0):
         """Cerca {{ dins el text, les classifica i substitueix.
         Es marca amb l'etiqueta REFP"""
@@ -34,22 +35,40 @@ class Plantilles():
         while text.find('{{') != -1:
             inici = text.find('{{')
             final = text.find('}}', inici)
+=======
+    def cerca_plantilles(self, text, inici=0):
+        """Cerca {{ dins el text, les classifica i substitueix.
+        Es marca amb l'etiqueta REFP"""
+        print '*** CERCA PLANTILLES ***'
+        while text.count('{{',inici) != 0:
+            contador = 0
+            inici = text.find('{{',inici)
+            final = text.find('}}',inici)
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
             plantilla = text[inici:final+2]
             self.llista_plantilles.append(plantilla)
             print plantilla
             context = text[inici-20:final+20]
             plantilla = plantilla[2:-2]
             plantilla = plantilla.split('|')
+<<<<<<< HEAD
             plantilla.append(context)
             if plantilla[0] == u'Petició de traducció' or plantilla[0] == u'petició de traducció':
                 self.peticio(plantilla)
                 return
+=======
+            print plantilla
+            plantilla.append(context)
+            if plantilla[0] == u'Petició de traducció' or plantilla[0] == u'petició de traducció':
+                self.peticio(plantilla)
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
             else:
                 plantilla.append(self.plant_ca(plantilla,self.idioma_original))
                 for x in plantilla:
                     if x.count('=') != 0:
                         contador = 1
                 if contador > 0 :
+<<<<<<< HEAD
                     print u'* TAULA *'
                     plantilla = self.desfer_taules(plantilla)
                 else:
@@ -58,6 +77,21 @@ class Plantilles():
             plantilla = text[inici:final+2]
             text = text.replace(plantilla, 'REFP%i' %(par))
             par += 1
+=======
+                    self.desfer_taules(plantilla)
+                else:
+                    self.plant_text(plantilla)
+            inici = final
+            contador = 0
+        contador = -1
+        for plantilla in self.llista_plantilles:
+            text = text.replace(plantilla, 'REFP%i' %(contador))
+            contador += 1
+        contador = 0
+        for x in self.llista_plantilles:
+            print x
+        self.parametres = 0
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
         return text
 
     def peticio(self, plantilla):
@@ -76,11 +110,28 @@ class Plantilles():
 
     def desfer_taules(self, plantilla):
         """Gestiona les plantilles de tipus parametre=valor"""
+<<<<<<< HEAD
+=======
+        print u'* TAULA *'
+        par = self.parametres
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
         llista_plantilla = []
         for esquema in plantilla:
             llista = esquema.split('=')
             llista_plantilla.append(llista)
+<<<<<<< HEAD
         return llista_plantilla
+=======
+            self.refs['REFP%i' %(par)] = llista_plantilla
+        self.parametres += 1
+
+    def plant_text(self, plantilla):
+        """S'entén que qualsevol altra plantilla és una plantrilla de text'"""
+        print u'* PLANTILLA DE TEXT *'
+        par = self.parametres
+        self.refs['REFP%i' %(par)] = plantilla
+        self.parametres += 1
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
 
     def plant_ca(self, plantilla, idioma):
         """Cerca la plantilla a ca:viquipedia respecte la plantilla original"""
@@ -89,6 +140,11 @@ class Plantilles():
                    u'es' : u'Plantilla:',
                    u'de' : u'Vorlage'
                    }
+<<<<<<< HEAD
+=======
+        print '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
+        print plantilla[0]
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
         if plantilla[0].startswith(self.ordena[idioma]):
             missatge = u"Aquesta és la plantilla d'ordenació."
             return missatge
@@ -98,6 +154,7 @@ class Plantilles():
         try:
             pagina_plantilla= wikipedia.Page(idioma,pagina)
             plantilla_ori = pagina_plantilla.get()
+<<<<<<< HEAD
         except:
             pagina = dicc_id[idioma]+nom
             pagina_plantilla= wikipedia.Page(idioma,pagina)
@@ -112,6 +169,20 @@ class Plantilles():
             inici = plantilla_ori.find('[[ca:')
             final = plantilla_ori.find(']]',inici)
             missatge = plantilla_ori[inici:final+2]
+=======
+            inici = plantilla_ori.find(u'[[ca:')
+            if inici == -1:
+                missatge = u'No existeix la plantilla en català'
+                print missatge
+            else:
+                inici = plantilla_ori.find('[[ca:')
+                final = plantilla_ori.find(']]',inici)
+                missatge = plantilla_ori[inici:final+2]
+
+                print missatge
+        except:
+            missatge = u"Aquesta plantilla no té pàgina d'ús'"
+>>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
             return missatge
 
     def ordena_diccionari(self, dicc):
