@@ -21,144 +21,105 @@
 #  MA 02110-1301, USA.
 #
 #
-<<<<<<< HEAD
-import time
 
-class Enllacos():
+import re, time, wikipedia
 
-    def cerca_enllacos(self, text, par = 0):
-=======
+class Gestio():
 
+    def gestiona_commons(self, enllac):
+        """Gestiona els fitxers de commons"""
+        print u'* PROCESSANT UN FITXER DE COMMONS *'
+        enllac = enllac[2:-2]
+        if enllac.find('REF') != -1:
+            marca = re.findall(r' REF\w+[\S]', enllac)
+            for ref in marca:
+                ref = ref+u' '
+                if ref.startswith(u' REFEA'):
+                    canvi = self.gestiona_enllac(self.refs[ref])
+                    enllac = enllac.replace(ref, canvi)
+        marca_enllac = enllac.rfind(u'|')
+        text = enllac[marca_enllac+1:]
+        text_traduit = self.traductor(text)
+        enllac = enllac.replace(text,text_traduit)
+        return u'[[' + enllac + u']]'
 
-class Enllacos():
+    def gestiona_enllac(self, enllac):
+        """Gestiona els enllaços de text"""
+        print u'* PROCESSANT UN ENLLAÇ DE TEXT *'
+        enllac = enllac[2:-2]
+        if enllac.find(u'|') != -1:
+            marca = enllac.find(u'|')
+            enllac = enllac[marca+1:]
+        return enllac
 
-    def cerca_enllacos(self, text, inici=0):
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-        """Cerca [], els classifica i substitueix en el text.
-        Es marca amb l'etiquetra REFE"""
-        print u'*** ENLLAÇOS ***'
-        marca = ''
-        categoria = 0
-        llista_http = []
-        llista_simple = []
-        llista_complexa = []
-        llista_fitxer = []
-        llista_categoria = []
-        llista_interviqui = []
-<<<<<<< HEAD
-        while text.find('[') != -1:
-            contador = 0
-            inici = text.find('[')
-            final = text.find(']')
-=======
-        par = self.parametres
-        while text.find('[',inici) != -1:
-            contador = 0
-            inici = text.find('[',inici)
-            final = text.find(']',inici)
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-            inici2 = inici
-            while marca != 'prou':
-                if text.find('[',inici2+2,final) != -1:
-                    inici2 = final
-                    final = text.find(']', final+2)
-                else:
-                    marca = 'prou'
-            marca = ''
-<<<<<<< HEAD
-            if text.startswith(u'[http:', inici):
-                print u'* ENLLAÇ WEB *'
-                enllac = text[inici:final+1]
-                context = text[inici-20:final+20]
-                text = text.replace(enllac, 'REFE%i' %(par))
-                enllac = [enllac,context]
-                llista_http.append(enllac)
-            elif text.startswith('[[File:', inici) or text.startswith(u'[[Image:', inici):
-=======
-            if text[inici+1] != '[':
-                print u'* ENLLAÇ WEB *'
-                enllac = text[inici:final+1]
-                llista_http.append(enllac)
-            elif text.startswith('[[File:', inici):
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-                print '* FITXER DE COMMONS * '
-                if text[final+3] == ']':
-                    final = final + 2
-                enllac = text[inici:final+2]
-                context = text[inici-20:final+20]
-<<<<<<< HEAD
-                text = text.replace(enllac, 'REFE%i' %(par))
-=======
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-                enllac = [enllac,context]
-                llista_fitxer.append(enllac)
-            elif text.startswith(self.diccionari_cat[self.idioma_original], inici):
-                print '* ENLLAÇ DE CATEGORIA *'
-                enllac = text[inici:final+2]
-                context = text[inici-20:final+20]
-<<<<<<< HEAD
-                text = text.replace(enllac, 'REFE%i' %(par))
-=======
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-                enllac = [enllac,context]
-                llista_categoria.append(enllac)
-                categoria = 1
-            else:
-                if categoria == 1:
-                    print '* ENLLAÇ INTERVIQUI *'
-                    enllac = text[inici:final+2]
-<<<<<<< HEAD
-                    context = text[inici-20:final+20]
-                    text = text.replace(enllac, 'REFE%i' %(par))
-                    enllac = [enllac,context]
-=======
-                context = text[inici-20:final+20]
-                enllac = [enllac,context]
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-                    llista_interviqui.append(enllac)
-                else:
-                    print '* ENLLAÇ DE TEXT *'
-                    enllac = text[inici:final+2]
-                    if enllac.find('|') != -1:
-<<<<<<< HEAD
-                        inici_marca = enllac.find('|')
-                        context = text[inici-20:final+20]
-                        enllac = [enllac,context]
-                        text = text.replace(enllac[0], enllac[0][inici_marca+1:-2])
-                        print enllac[0][inici_marca+1:-2]
-                        llista_complexa.append(enllac)
-                    else:
-                        context = text[inici-20:final+20]
-                        enllac = [enllac,context]
-                        print enllac[0][2:-2]
-                        text = text.replace(enllac[0], enllac[0][2:-2])
-                        llista_simple.append(enllac)
-            inici = final-1
-            print enllac
-            self.refs['*REFE%i' %(par)] = enllac
-            par += 1
-            time.sleep(1)
-        self.llista_enllacos = [llista_http,llista_simple,llista_complexa,llista_fitxer,llista_categoria,llista_interviqui]
-        return text
-=======
-                        context = text[inici-20:final+20]
-                        enllac = [enllac,context]
-                        llista_complexa.append(enllac)
-                        print 'complex'
-                    else:
-                        context = text[inici-20:final+20]
-                        enllac = [enllac,context]
-                        llista_simple.append(enllac)
-                        print 'simple'
-            inici = final+2
-            print enllac
-            self.refs['REFE%i' %(par)] = enllac
-            par += 1
-        self.llista_enllacos = [llista_http,llista_simple,llista_complexa,llista_fitxer,llista_categoria,llista_interviqui]
-        self.parametres = 0
-        return 0
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
+    def gestiona_plantilles(self, plantilla, key):
+        """Gestiona les plantilles"""
+        print u'* PROCESSANT UNA PLANTILLA *'
+        plantilla_ca = self.plant_ca(plantilla, self.idioma_original)
+        if plantilla_ca == u'No existeix la plantilla en català':
+            missatge = plantilla+u"<ref group=nt>La plantilla no existeix en català, o almenys, no s'ha pogut trobar automàticament. En cas que trobeu la corresponent plantilla ja traduida poseu-hi l'enllaç interviqui per poder trobar-la en següents traduccions.</ref>"
+            return missatge
+        else:
+            inici = plantilla_ca.rfind(u':')
+            plantilla_ca = plantilla_ca[inici+1:-2]
+            final = plantilla.find(u'|')
+            plantilla = plantilla.replace(plantilla[2:final], plantilla_ca)
+        return plantilla
 
-if __name__ == '__main__':
-    main()
+    def plant_ca(self, plantilla, idioma):
+        """Cerca la plantilla a ca:viquipedia respecte la plantilla original"""
+        plantilla = plantilla[2:-2]
+        plantilla = plantilla.split(u'|')
+        dicc_id = {u'en' : u'Template:',
+                   u'fr' : u'Modèle:',
+                   u'es' : u'Plantilla:',
+                   u'de' : u'Vorlage:'
+                   }
+        if plantilla[0].startswith(self.ordena[idioma]):
+            missatge = u"Aquesta és la plantilla d'ordenació."
+            return missatge
+        nom = plantilla[0].rstrip()
+        nom = nom.lstrip()
+        pagina = dicc_id[idioma]+nom+u'/doc'
+        try:
+            pagina_plantilla= wikipedia.Page(idioma,pagina)
+            plantilla_ori = pagina_plantilla.get()
+        except:
+            pagina = dicc_id[idioma]+nom
+            pagina_plantilla= wikipedia.Page(idioma,pagina)
+            try:
+                plantilla_ori = pagina_plantilla.get()
+            except:
+                plantilla_ori = ''
+            missatge = u"Aquesta plantilla no té pàgina d'ús"
+        inici = plantilla_ori.find(u'[[ca:')
+        if inici == -1:
+            missatge = u'No existeix la plantilla en català'
+            print missatge
+        else:
+            final = plantilla_ori.find(u'}}',inici)
+            missatge = plantilla_ori[inici:final+2]
+        return missatge
 
+    def gestiona_codi(self, valor0):
+        """Gestiona el codi tancat entre < > que no són referències"""
+        print u'* PROCESSANT CODI WIKI *'
+        nombre0 = int(valor0[6:])
+        nombre1 = nombre0 + 1
+        nombre1 = str(nombre1).zfill(4)
+        nombre0 = str(nombre0).zfill(4)
+        valor1 = valor0[:6] + unicode(nombre1) + u' '
+        if self.refs[valor0][1:] == self.refs[valor1][2:]:
+            inici = self.text_trad.find(valor0)
+            final = self.text_trad.find(valor1)
+            nou_text = self.text_trad[inici:final]
+            self.text_trad = self.text_trad.replace(nou_text, valor0)
+            nou_text = nou_text.replace(valor0, u'')
+            self.count = 0
+        else:
+            print valor0
+            print u'¿?¿?¿?¿?¿? COMPTE, AQUEST CODI WIKI ENCARA NO ESTÂ IMPLEMENTAT ¿?¿?¿?¿?¿?'
+            print self.refs[valor0]
+            raw_input (u'Seguim?')
+            nou_text = valor0
+        return nou_text

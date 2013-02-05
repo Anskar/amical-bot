@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 #  sense títol.py
 #
@@ -22,173 +22,85 @@
 #
 #
 
-from registre import Registre
 import wikipedia
+import time
+import re
+import codecs
 
 class Plantilles():
 
-<<<<<<< HEAD
-    def cerca_plantilles(self, text, inici=0, par= 0, contador=0):
-        """Cerca {{ dins el text, les classifica i substitueix.
-        Es marca amb l'etiqueta REFP"""
-        print '*** CERCA PLANTILLES ***'
-        while text.find('{{') != -1:
-            inici = text.find('{{')
-            final = text.find('}}', inici)
-=======
-    def cerca_plantilles(self, text, inici=0):
-        """Cerca {{ dins el text, les classifica i substitueix.
-        Es marca amb l'etiqueta REFP"""
-        print '*** CERCA PLANTILLES ***'
-        while text.count('{{',inici) != 0:
-            contador = 0
-            inici = text.find('{{',inici)
-            final = text.find('}}',inici)
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-            plantilla = text[inici:final+2]
-            self.llista_plantilles.append(plantilla)
-            print plantilla
-            context = text[inici-20:final+20]
-            plantilla = plantilla[2:-2]
-            plantilla = plantilla.split('|')
-<<<<<<< HEAD
-            plantilla.append(context)
-            if plantilla[0] == u'Petició de traducció' or plantilla[0] == u'petició de traducció':
-                self.peticio(plantilla)
-                return
-=======
-            print plantilla
-            plantilla.append(context)
-            if plantilla[0] == u'Petició de traducció' or plantilla[0] == u'petició de traducció':
-                self.peticio(plantilla)
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-            else:
-                plantilla.append(self.plant_ca(plantilla,self.idioma_original))
-                for x in plantilla:
-                    if x.count('=') != 0:
-                        contador = 1
-                if contador > 0 :
-<<<<<<< HEAD
-                    print u'* TAULA *'
-                    plantilla = self.desfer_taules(plantilla)
-                else:
-                    print u'* PLANTILLA DE TEXT *'
-            self.refs['*REFP%i' %(par)] = plantilla
-            plantilla = text[inici:final+2]
-            text = text.replace(plantilla, 'REFP%i' %(par))
-            par += 1
-=======
-                    self.desfer_taules(plantilla)
-                else:
-                    self.plant_text(plantilla)
-            inici = final
-            contador = 0
-        contador = -1
-        for plantilla in self.llista_plantilles:
-            text = text.replace(plantilla, 'REFP%i' %(contador))
-            contador += 1
-        contador = 0
-        for x in self.llista_plantilles:
-            print x
-        self.parametres = 0
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-        return text
-
-    def peticio(self, plantilla):
+    def peticio(self, plantilla, par=0):
         """Gestiona la plantilla de petició"""
         print u'* PLANTILLA DE PETICIÓ DE TRADUCCIÓ *'
+        final = plantilla.find('}}')
+        plantilla = plantilla[1:final].split('|')
         self.idioma_original = plantilla[1].lower()
+        self.titol_original = plantilla[2]
         for valor in plantilla[1:]:
             print valor
             clau = self.diccionari_peticio.keys()
             clau.sort()
             if valor.count(u'--[[Usuari:') != 0:
                 valor = valor[4:]
-            self.diccionari_peticio[clau[self.conta_plant]] = valor
-            self.conta_plant += 1
-        self.conta_plant = 0
+            self.diccionari_peticio[clau[par]] = valor
+            par +=1
+        self.passos(self.diccionari_peticio, u'Plantilla de peticio de traduccio')
 
-    def desfer_taules(self, plantilla):
-        """Gestiona les plantilles de tipus parametre=valor"""
-<<<<<<< HEAD
-=======
-        print u'* TAULA *'
-        par = self.parametres
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-        llista_plantilla = []
-        for esquema in plantilla:
-            llista = esquema.split('=')
-            llista_plantilla.append(llista)
-<<<<<<< HEAD
-        return llista_plantilla
-=======
-            self.refs['REFP%i' %(par)] = llista_plantilla
-        self.parametres += 1
-
-    def plant_text(self, plantilla):
-        """S'entén que qualsevol altra plantilla és una plantrilla de text'"""
-        print u'* PLANTILLA DE TEXT *'
-        par = self.parametres
-        self.refs['REFP%i' %(par)] = plantilla
-        self.parametres += 1
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-
-    def plant_ca(self, plantilla, idioma):
-        """Cerca la plantilla a ca:viquipedia respecte la plantilla original"""
-        dicc_id = {u'en' : u'Template:',
-                   u'fr' : u'Modèle:',
-                   u'es' : u'Plantilla:',
-                   u'de' : u'Vorlage'
-                   }
-<<<<<<< HEAD
-=======
-        print '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
-        print plantilla[0]
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-        if plantilla[0].startswith(self.ordena[idioma]):
-            missatge = u"Aquesta és la plantilla d'ordenació."
-            return missatge
-        nom = plantilla[0].rstrip()
-        nom = nom.lstrip()
-        pagina = dicc_id[idioma]+nom+u'/doc'
-        try:
-            pagina_plantilla= wikipedia.Page(idioma,pagina)
-            plantilla_ori = pagina_plantilla.get()
-<<<<<<< HEAD
-        except:
-            pagina = dicc_id[idioma]+nom
-            pagina_plantilla= wikipedia.Page(idioma,pagina)
-            plantilla_ori = pagina_plantilla.get()
-            missatge = u"Aquesta plantilla no té pàgina d'ús'"
-
-        inici = plantilla_ori.find(u'[[ca:')
-        if inici == -1:
-            missatge = u'No existeix la plantilla en català'
-            return missatge
-        else:
-            inici = plantilla_ori.find('[[ca:')
-            final = plantilla_ori.find(']]',inici)
-            missatge = plantilla_ori[inici:final+2]
-=======
-            inici = plantilla_ori.find(u'[[ca:')
-            if inici == -1:
-                missatge = u'No existeix la plantilla en català'
-                print missatge
-            else:
-                inici = plantilla_ori.find('[[ca:')
-                final = plantilla_ori.find(']]',inici)
-                missatge = plantilla_ori[inici:final+2]
-
-                print missatge
-        except:
-            missatge = u"Aquesta plantilla no té pàgina d'ús'"
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-            return missatge
-
-    def ordena_diccionari(self, dicc):
-        print u'\nDiccionari ordenat:'
-        clau = dicc.keys()
-        clau.sort()
-        for x in clau:
-            print u'*'+str(x)+u'*'
-            print dicc[x]
+    def ordena_diccionari(self, dicc, count=0):
+        """Repassa el diccionari self.refs per gestional el codi.
+        Cada codi té una marca que es troba en el diccionari de tuples self.marques"""
+        print u'\n*** PROCESSANT EL DICCIONARI DE REFERÈNCIES ***'
+        claus = sorted(dicc.keys(), reverse=True)
+        self.count = count
+        for valor in claus:
+            nou_text = dicc[valor]
+            self.passos([str(valor),dicc[valor]], 'Diccionari ordenat en brut:')
+            if valor.startswith(self.cerques[0][-1][:-3]): # Comentaris
+                print u'* PROCESSANT COMENTARI *'
+                nou_text = u'<!--' + self.traductor(nou_text[4:-3]) + u'-->'
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[1][-1][:-3]): # Enllaços de text
+                nou_enllac = self.gestiona_enllac(nou_text)
+                self.text_trad = self.text_trad.replace(valor, nou_enllac)
+                dicc[valor] = nou_enllac
+                continue
+            elif valor.startswith(self.cerques[2][-1][:-3]): # Enllaços web
+                print u'* PROCESSANT ENLLAÇ WEB *'
+                inici = nou_text.find(u' ')
+                nou_text = nou_text.replace(nou_text[inici:], self.traductor(nou_text[inici:]))
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[3][-1][:-3]): # Plantilles !! ENCARA FALTA
+                nou_text = self.gestiona_plantilles(nou_text, valor)
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[4][-1][:-3]): # Referències úniques
+                print u'* PROCESSANT REFERÈNCIES *'
+                inici = nou_text.find(u'>')
+                final = nou_text.find(u'</')
+                nou_text = nou_text.replace(nou_text[inici+1:final], self.traductor(nou_text[inici+1:final]))
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[5][-1][:-3]): # Primers ref name
+                print u'* PROCESSANT REFERÈNCIES *'
+                inici = nou_text.find(u'>')
+                final = nou_text.find(u'</')
+                nou_text = nou_text.replace(nou_text[inici+1:final], self.traductor(nou_text[inici+1:final]))
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[6][-1][:-3]): # Següents ref name
+                print u'* PROCESSANT REFERÈNCIES *'
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[7][-1][:-3]): # Taules !! ENCARA FALTA
+                print u'* PROCESSANT TAULES *'
+                dicc[valor] = nou_text
+            elif valor.startswith(self.cerques[8][-1][:-3]): # Altre codi !! ENCARA FALTA
+                if nou_text in self.passa_codi:
+                    continue
+                if self.count != 1:
+                    self.count = 1
+                    continue
+                else:
+                    marca = self.refs[valor]
+                    nou_text = self.gestiona_codi(valor)
+                    dicc[valor] = marca + nou_text
+            else: # Enllaços de commons que no tenen cabuda en la llista de tuples self.cerques però queden dins del diccionari selfs.ref
+                nou_text = self.gestiona_commons(dicc[valor])
+                dicc[valor] = nou_text
+            self.passos([str(valor),dicc[valor]], 'Diccionari ordenat traduit:')

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 #  sense títol.py
 #
@@ -23,65 +23,71 @@
 #
 
 import wikipedia, codecs, re, catlib
-import  httplib, time, urllib
-from time import strftime as date
+#import httplib, urllib
+import time
+import os
+import subprocess
+import sys
 
 # Importar els altres arxius
-from registre import Registre
-from plantilles import Plantilles
-from apertium import Traductor
 from text import Text
-from ref import Ref
+from precerca import PreCercaSubst
+from plantilles import Plantilles
+from enllacos import Gestio
+from registre import Registre
+from apertium import Traductor
 
-
-class Amical(Plantilles,Text, Traductor,Ref):
+class Amical(Text,PreCercaSubst,Plantilles,Gestio,Registre,Traductor):
 
     def arrenca(self):
+        """Només mostra aquest començament quan arrenca el bot desde consola.
+        Apartat completament suprimible... però queda tant bufó... :P """
         print
-        print u'////////////////////////////'
-        print u'///**********************///'
-        print u'///* ARRENCA AMICAL BOT *///'
-        print u'///**********************///'
-        print u'////////////////////////////'
+        print u'////////////////////////////'.center(150)
+        print u'///**********************///'.center(150)
+        print u'///* ARRENCA AMICAL BOT *///'.center(150)
+        print u'///**********************///'.center(150)
+        print u'////////////////////////////'.center(150)
         print
         self.inici()
 
     def variables(self):
         """Definim les variables globals"""
-        self.refs = {}
-        self.llista_plantilles = []
-        self.llista_enllacos = []
-        self.llista_refs = []
-        self.titol_original = ''
-        self.idioma_original = ''
-        self.usuari_peticio = ''
-        self.diccionari_peticio = {'a_idioma' : self.idioma_original,
-                    'b_titol' : self.titol_original,
-                    'c_usuari' : self.usuari_peticio,
-                    'd_par1' : '',
-                    'e_par2' : '',
-                    'f_par3' : '',
-                    'g_par4' : '',
-                    'h_par5' : '',
-                    'i_par6' : ''}
-        self.parametres = 0
-        self.conta_plant = 0
-        self.diccionari_cat = {u'en' : u'[[Category:',
-                               u'es' : u'[[Categoría:',
-                               u'fr' : u'[[Catégorie:',
-                               u'de' : u'[[Kategorie:'}
-        self.ordena = { 'en' : u'DEFAULTSORT',
-                         'es' : u'ORDENAR',
-                         'fr' : u'DEFAULTSORT'}
-<<<<<<< HEAD
+        self.refs = {} # Diccionari dels codis processats abans de traduir
+        self.cerques =[(u'<!--',u'-->', u' REFCO%s '), # Llista de tuples que ...
+                       (u'[[',u']]', u' REFEA%s '),    # ... estableix el caràcter de cerca ...
+                       (u'[http:',u']', u' REFEW%s '), # ... i el relaciona amb la referència que substituirà.
+                       (u'{{',u'}}', u' REFPL%s '),                # La tupla consta de tres paràmetres:
+                       (u'<ref>' , u'</ref>', u' REFRE%s '),       # 1: El primer terme de cerca, (p.e. {{ com a primer terme)
+                       (u'<ref name' , u'</ref>' , u' REFRI%s '),  # 2: El darrer terme de cerca, (ha de trobar }} com a darrer terme)
+                       (u'<ref name', u'/>', u' REFRN%s '),      # 3: La referència que substitueix el codi trobat
+                       (u'{|',u'|}', u' REFTA%s '),
+                       (u'<' , u'>' , u' REFWC%s ')
+                        ]
+        self.titol_original = ''   # Variables que defineixen la plantilla de petició de traducció
+        self.idioma_original = ''  # a saber: titol original de la pàgina que es vol traduir
+        self.usuari_peticio = ''   # idioma original i l'usuari que demana la traducció
+        self.diccionari_peticio = {u'a_idioma' : self.idioma_original, # Diccionari de la plantilla de peticio de traduccio
+                    u'b_titol' : self.titol_original,
+                    u'c_usuari' : self.usuari_peticio,
+                    u'd_par1' : '',
+                    u'e_par2' : '',
+                    u'f_par3' : '',
+                    u'g_par4' : '',
+                    u'h_par5' : '',
+                    u'i_par6' : ''}
+        self.diccionari_cat = {u'en' : u'[[Category',  # Diccionari per gestionar les categories
+                               u'es' : u'[[Categoría', #... en els diferents idiomes possibles de traducció
+                               u'fr' : u'[[Catégorie',
+                               u'de' : u'[[Kategorie'}
+        self.ordena = { u'en' : u'DEFAULTSORT', # Diccionari per gestionar la plantilla {{ORDENA ...
+                        u'es' : u'ORDENAR',     #... en els diferents idiomes de traducció
+                        u'fr' : u'DEFAULTSORT'}
+        self.cops_k_passa = 0 # Variable global que gestiona el nombre de vegades que es registra un procés a l'arxiu registre.txt
+        self.passa_codi = [u'<references/>', u'<br>']
 
-=======
->>>>>>> 1faf3bd32661f0382917c65bd9c5c0163b0b7546
-    def inici(self):
-        peticions = 1
-        arxiu = open(u'passos.txt', 'w')
-        arxiu.write('')
-        arxiu.close()
+    def inici(self, peticions=1):
+        """Comença el programa"""
         projecte = wikipedia.getSite()
         cat = catlib.Category(projecte, u"Categoria:Peticions de còpia i preprocés per traducció automàtica")
         pagines = cat.articles()
@@ -90,20 +96,32 @@ class Amical(Plantilles,Text, Traductor,Ref):
             titol = pagina.title()
             print '***********************************************************************************************************************'
             print '***********************************************************************************************************************'
-            print  u'**********        ',peticions,u'.- COMENÇA EL PROCÉS  per la petició que es troba a ->',titol,u'        **********'
+            print  (u'*****  '+str(peticions)+u'.- COMENCA EL PROCES  per la peticio que es troba a ->'+unicode(titol)+u'  *****').center(118)
             print '***********************************************************************************************************************'
             print '***********************************************************************************************************************'
             self.titol = titol.encode('utf-8')
             print pagina
             text_ca = pagina.get()
-            self.cerca_plantilles(text_ca)
-            pagina_trad = wikipedia.Page(self.diccionari_peticio['a_idioma'],self.diccionari_peticio['b_titol'])
+            self.peticio(text_ca)
+            pagina_trad = wikipedia.Page(self.diccionari_peticio[u'a_idioma'],self.diccionari_peticio[u'b_titol'])
             print pagina_trad
-            self.canviar_text(pagina_trad.get())
+            self.text_trad = pagina_trad.get()
+            print u"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+            print (u"% EL REGISTRE ES TROBA A registre-"+unicode(self.titol_original)+".txt %").center(90)
+            print u"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"
+            text = self.canviar_text(self.text_trad)
+            print u'\n****************************************'
+            print u'********** ACABADA LA PETICIÓ **********'
+            print u'****************************************\n'
+            pagina_gravar = wikipedia.Page(u'ca',u'Usuari:Anskar/Traduccions/'+unicode(str(peticions)))
+            pagina_gravar.put(text)
             peticions +=1
             prec = raw_input('Seguim amb la següent petició?\n[S]/n :')
             if prec == 'n':
                 return 0
+        print u'\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
+        print (u'OOOOO   ACABADES LES TRADUCCIONS   OOOOO').center(60)
+        print u'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
         return 0
 
 app = Amical()
