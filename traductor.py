@@ -33,7 +33,7 @@ class Avisos:
 
     def avisar_usuari(self):
         """Es deixa un missatge a la pàgina de discussió de l'usuari
-        per comunicar que l'ha traducció s'ha comepltat"""
+        per comunicar que la traducció s'ha completat"""
         missatge = u"\n== Petició de traducció ==\n*La vostra petició de traducció de l'article " + self.titol_original + " es troba a [[" + self.titol + u"|la pàgina on tenieu la plantilla de petició de traducció]]. --~~~~\n"
         pagina = wikipedia.Page(u'ca', self.discussio_usuari)
         p = re.compile(u'\n== Petició de traducció ==\n')
@@ -384,6 +384,8 @@ class Text:
 #        text = text.replace(u"''", u'') # Es treuen les marques de text en cursiva
         text = text.replace(u'\n*', u'\n* ') # La llista no numerada ha de contenir un espai entre l'asterisc i la frase...
         text = text.replace('*', ' ASTR ')
+        text = text.replace(u'&ndash;',u'–')
+        text = text.replace(u'&mdash;', u'—')'-'
         self.text_trad = self.cerca(text)
         self.ordena_diccionari(self.refs)
         self.passos(self.text_trad, u'Aquest es el text preparat per traduir:\n\n************************************************************************************************************************\n\n')
@@ -431,7 +433,7 @@ class Text:
             self.passos(self.refs[ref1], 'Canvi en el text: '+str(ref))
         return text
 
-class Amical(Text,PreCercaSubst,Plantilles,Gestio,Registre,Traductor):
+class Amical(Text,PreCercaSubst,Plantilles,Gestio,Registre,Traductor,Avisos,Canvis):
 
     def arrenca(self):
         """Només mostra aquest començament quan arrenca el bot desde consola.
@@ -488,14 +490,13 @@ class Amical(Text,PreCercaSubst,Plantilles,Gestio,Registre,Traductor):
         pagines = cat.articles()
         for pagina in pagines:
             self.variables()
-            titol = pagina.title()
+            self.titol = pagina.title()
             print '*********************************************************************************************************************************'
             print '*********************************************************************************************************************************'
             print  (u'*****  '+str(peticions)+u'.- COMENCA EL PROCES  per la peticio que es troba a ->'+unicode(self.titol)+u'  *****').center(118)
             print '*********************************************************************************************************************************'
             print '*********************************************************************************************************************************'
-            self.titol = titol.encode('utf-8')
-            print pagina
+            print pagina #Pàgina que té la petició de traducció
             text_ca = pagina.get()
             self.peticio(text_ca)
             pagina_trad = wikipedia.Page(self.diccionari_peticio[u'a_idioma'],self.diccionari_peticio[u'b_titol'])
@@ -511,6 +512,7 @@ class Amical(Text,PreCercaSubst,Plantilles,Gestio,Registre,Traductor):
             if put:
                 pagina_gravar = wikipedia.Page(u'ca',u'Usuari:Anskar/Traduccions/'+unicode(str(peticions)))
                 pagina_gravar.put(text, u"bot generant una nova traducció automàtica", minorEdit = False)
+                self.avisar_usuari()
             peticions +=1
         print u'\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
         print (u'OOOOO   ACABADES LES TRADUCCIONS   OOOOO').center(60)
