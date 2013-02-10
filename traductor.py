@@ -716,6 +716,7 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         print u'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
         return 0
 
+
 try:
     app = Amical()
     app.arrenca()
