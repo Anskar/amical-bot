@@ -127,7 +127,7 @@ class Traductor:
 
     def traductor(self, text):
         original = open('traduccions/original.txt', 'w')
-        print u'Traduint...: '
+        print u'\nTraduint...:\n'
         print text
         text = text.encode('utf-8')
         original.write(text)
@@ -147,7 +147,7 @@ class Traductor:
         arxiu_traduit.close()
         text_traduit = unicode(text_traduit.decode('utf-8'))
         print text_traduit
-        print u'Traducció acabada'
+        print u'\nTraducció acabada\n'
         return text_traduit
 
 ############################
@@ -524,7 +524,7 @@ class Text:
             capitol = capitol.replace(u'\n*', u'\n* ') # La llista no numerada ha de contenir un espai entre l'asterisc i la frase...
             capitol = capitol.replace('*', ' ASTR ')
             capitol = re.sub(r"'{3}", " ''' ", capitol)
-            capitol = re.sub(r"(?!')'{2}'", " '' ", capitol)
+            capitol = re.sub(r"'{2}(?!')", " '' ", capitol)
             capitol = capitol.replace(u'&ndash;',u'–')
             capitol = capitol.replace(u'&mdash;', u'—')
             codi = re.findall(r'[\w]+=".+?"',capitol)
@@ -550,7 +550,6 @@ class Text:
             self.passos(self.text_trad, u'Aquest es el paragraf preparat per traduir:\n\n************************************************************************************************************************\n\n')
 
             paragraf = unicode(self.traductor(self.text_trad)+u'\n\n'.decode('utf-8'))
-            print paragraf
             self.passos(capitol_ori, u'Angles original\n')
             self.passos(self.text_trad, u'Angles processat\n')
             self.passos(paragraf, u'Catala processat\n')
@@ -588,7 +587,7 @@ class Text:
             text_final = text_final.replace(u'  ', u' ')
         #while text_final.find(u'\n ') != -1:
             #text_final = text_final.replace(u'\n ', u'\n')
-        text_final = text_final+u'\n[['+self.idioma_original+u':'+self.titol_original+u"]]\n\n==Notes de traducció==\nLes plantilles en vermell són les plantilles que no s'ha pogut trobar la plantilla corresponent en català, això no vol dir que la plantilla no existeixi, sino que no s'ha pogut trobar automàticament per que no hi ha el corresponent enllaç interviqui, o per que realment no esxisteix la plantilla en català. En cas que trobeu la plantilla corresponent us agrairia que li posesiu el seu enllaç interviqui a la plantilla en anglès per poder trobar-la en properes traduccions. Gràcies."
+        text_final = text_final+u'\n[['+self.idioma_original+u':'+self.titol_original+u"]]\n\n==Notes de traducció==\n*Les plantilles en vermell són les plantilles que no s'han pogut trobar la corresponent plantilla en català. Això no vol dir que la plantilla no existeixi, sino que no s'ha pogut trobar automàticament, ja sigui per que no hi ha el corresponent enllaç interviqui, o per que realment no existeix la plantilla en català. En cas que trobeu la plantilla corresponent us agrairia que li posesiu el seu enllaç interviqui a la plantilla en anglès per poder trobar-la en properes traduccions. Gràcies. --~~~~\n\n*Podeu comentar possibles millores en el bot de traducció en [[Usuari:Anskarbot/Errors|aquesta pàgina]]. --~~~~\n\n*Les paraules que el programa [[Apertium]] encara no tradueix queden registrades automàticament. Si trobeu alguna millora en la traducció podeu expresar-ho a la mateixa [[Usuari:Anskarbot/Errors|pàgina d'errors]]. --~~~~"
         self.passos(text_final,u'\n***************\n** Text finalitzat **\n***************\n')
         return text_final
 
@@ -663,7 +662,7 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         self.cops_k_passa = 0 # Variable global que gestiona el nombre amb que es registra un procés a l'arxiu registre.txt
         self.llista_no_trad = []
 
-    def inici(self, peticions=2, gravar_viqui=False, proves=True, web=False):
+    def inici(self, peticions=2, gravar_viqui=False, proves=True):
         """Comença el programa.
         Els arguments que accepta la funció són:
         1.- peticions: el nombre de la primera petició.
@@ -673,7 +672,6 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         3.- proves: Mentre estigui en fase de proves no es borrarà la plantilla de petició
             i es posarà el text a la viqui en una pàgina de proves expressa
             per anar provant el bot. True per defecte"""
-        self.web = web
         gravar_viqui = raw_input(u"Per defecte els canvis no seran gravats a la viqui.\nEn cas que es vulgui gravar el resultat de la traducció automàticament haureu d'escriure 'True' en aquesta pregunta:\n** Vols gravar els canvis a la pàgina corresponent de la viquipèdia? **:\nTrue/[False]".encode('utf-8'))
         projecte = wikipedia.getSite()
         cat = catlib.Category(projecte, u"Categoria:Peticions de còpia i preprocés per traducció automàtica")
@@ -715,7 +713,6 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         print (u'OOOOO   ACABADES LES TRADUCCIONS   OOOOO').center(60)
         print u'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
         return 0
-
 
 try:
     app = Amical()
