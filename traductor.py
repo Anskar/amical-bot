@@ -33,16 +33,15 @@ import sys
 
 class Avisos:
 
-    def avisar_usuari(self, pagina):
+    def avisar_usuari(self, pagina,enllac_pagina, missatge_bot):
         """Es deixa un missatge a la pàgina de discussió de l'usuari
         per comunicar que la traducció s'ha completat"""
-        if self.proves:
-            enllac_pagina = u'[['+pagina+u'|aquesta pàgina de proves]]'
-            missatge_bot = u'Anskarbot EN FASE DE PROVES '
+        if self.discussio_usuari == '':
+            falta = u" --~~~~\n*Recorda de signar les peticions de traducció, ja que si no és impossible que una màquina com jo sàpiga qui demana la traducció. Gràcies."
+            self.discussio_usuari = self.titol
         else:
-            enllac_pagina = u'[['+pagina+u']]'
-            missatge_bot = u'Anskarbot '
-        missatge = u"\n== Petició de traducció ==\n*La vostra petició de traducció de l'article " + self.titol_original + u" es troba a " + enllac_pagina + u". Quan repasseu la traducció podeu fer suggeriments de millora a [[Usuari:Anskarbot/Errors|la pàgina de millores del bot]] per anar millorant la traducció. Gràcies. --~~~~\n"
+            falta = ''
+        missatge = u"\n== Petició de traducció ==\n*La vostra petició de traducció de l'article '''" + self.titol_original + u"''' es troba en " + enllac_pagina + u". Quan repasseu la traducció podeu fer suggeriments de millora a [[Usuari:Anskarbot/Errors|la pàgina de millores del bot]] per anar millorant la traducció. Gràcies."+falta+u" --~~~~\n"
         pagina = wikipedia.Page(u'ca', self.discussio_usuari)
         p = re.compile(u'\n== Petició de traducció ==\n')
         pagina_discusio = pagina.get()
@@ -52,17 +51,14 @@ class Avisos:
             pagina_discusio = pagina_discusio+missatge
         # ATENCIÓ, NO EM DEIXA GRAVAR A AQUESTA PÀGINA PERQUE ESTÀ REDIRIGIDA ¿?
         pagina.put(pagina_discusio, missatge_bot + u'enviant missatge sobre petició de traducció automàtica', minorEdit = False, force=True)
-        index = u'Usuari:Anskarbot/Traduccions'
-        index = wikipedia.Page(u'ca',index)
-        contingut_index = index.get()
-        index.put(contingut_index+u'\n* [[/'+self.titol_original+']]. {{u|'+self.usuari_peticio+u'}}\n', missatge_bot + u"creant l'índex de les traduccions fetes")
 
     def paraules(self, idioma):
+        """Grava les paraules que Apertium no pot traduir"""
         pagina = u'Usuari:Anskarbot/'+idioma
-        text_pagina = wikipedia.Page(u'ca', pagina)
-        text_pagina = text_pagina.get()
+        pagina = wikipedia.Page(u'ca', pagina)
+        text_pagina = pagina.get()
         for paraules_no_trad in self.llista_no_trad:
-            text_pagina += paraules_no_trad+u'\n'
+            text_pagina += u'\n'+paraules_no_trad
         pagina.put(text_pagina, u"Anskarbot escribint la llista de paraules que no s'han pogut traduir", minorEdit=False, force=True)
         self.passos(text_pagina, u'paraules que no es troben dins Apertium per ser traduides')
 
@@ -76,8 +72,11 @@ class Avisos:
 
 class Canvis:
 
-    def pagina_re(self):
-        pass
+    def pagina_re(self, text, dicc):
+        """Reemplazo múltiple de cadenas en Python."""
+        print dicc
+        regex = re.compile("(%s)" % "|".join(map(re.escape, dicc.keys())))
+        return regex.sub(lambda x: unicode(dicc[x.string[x.start() :x.end()]]), text)
 
     def romans(self, nombre,divisio_anterior=0):
         """Canvia un nombre àrab a nombres romans.
@@ -112,7 +111,6 @@ class Canvis:
             divisio_anterior = divisio
             nombre = nombre - (divisio*marca)
             romans += unicode(divisio*dicc[marca])
-        print romans
         return romans
 
 ############################################
@@ -126,9 +124,8 @@ class Canvis:
 class Traductor:
 
     def traductor(self, text):
+        """Crida al programa Apertium"""
         original = open('traduccions/original.txt', 'w')
-        print u'\nTraduint...:\n'
-        print text
         text = text.encode('utf-8')
         original.write(text)
         original.close()
@@ -146,8 +143,6 @@ class Traductor:
         text_traduit = arxiu_traduit.read()
         arxiu_traduit.close()
         text_traduit = unicode(text_traduit.decode('utf-8'))
-        print text_traduit
-        print u'\nTraducció acabada\n'
         return text_traduit
 
 ############################
@@ -220,7 +215,8 @@ class Gestio:
     def gestiona_enllac(self, enllac):
         """Gestiona els enllaços de text"""
         print u'* PROCESSANT UN ENLLAÇ DE TEXT *'
-        print enllac
+        if enllac.find(u':',4,6) !=-1:
+            return enllac
         enllac = enllac[2:-2]
         if enllac.find(u'|') != -1:
             marca = enllac.find(u'|')
@@ -228,83 +224,89 @@ class Gestio:
             text = enllac[marca+1:]
             text_trad = self.traductor(text)
         else:
+            text = enllac
+            enllac_ori = enllac
             text_trad = self.traductor(enllac)
-        try:
-            pagina_enllac = wikipedia.Page(self.idioma_original,enllac)
-            enllac_ori = pagina_enllac.get()
-        except:
-            missatge = u'És un enllaç vermell'
-            enllac_ori = ''
-
+        enllac_ori = self.redireccions(enllac_ori,self.idioma_original)
         if enllac_ori.count(u'[[ca:') == 1:
             inici = enllac_ori.find(u'[[ca:')
             final = enllac_ori.find(u']]',inici)
             enllac_trad = enllac_ori[inici+5:final]
-            enllac1 = enllac_trad[0].lower()
-            enllac_trad1 = enllac1+enllac_trad[1:]
             text_trad = text_trad.replace(u'*',u'')
+            if text.istitle():
+                text_trad = text_trad.title()
+            elif text.isupper():
+                text_trad = text_trad.upper()
+            elif text.islower():
+                text_trad = text_trad.lower()
             if enllac_trad.lower() == text_trad.lower():
                 enllac = u'[['+text_trad+']]'
             else:
-                enllac = u'[['+enllac_trad1+u'|'+text_trad+u']]'
+                enllac = u'[['+enllac_trad+u'|'+text_trad+u']]'
         else:
+            print u'Sembla que la pàgina en català no existeix'
+            if text.istitle():
+                text_trad = text_trad.title()
+            elif text.isupper():
+                text_trad = text_trad.upper()
+            elif text.islower():
+                text_trad = text_trad.lower()
             enllac = text_trad
         return enllac
 
     def gestiona_plantilles(self, plantilla, key):
         """Gestiona les plantilles"""
         print u'* PROCESSANT UNA PLANTILLA *'
-        if self.web:
-            plantilla_ca = self.plant_ca(plantilla, self.idioma_original)
-            if plantilla_ca.startswith(u'No'):
-                missatge = plantilla+u"<ref group=nt>La plantilla no existeix en català, o almenys, no s'ha pogut trobar automàticament. En cas que trobeu la corresponent plantilla ja traduda poseu-hi l'enllaç interviqui per poder trobar-la en següents traduccions.</ref>"
-                return missatge
-            else:
-                inici = plantilla_ca.rfind(u':')
-                plantilla_ca = plantilla_ca[inici+1:-2]
-                final = plantilla.find(u'|')
-                plantilla = plantilla.replace(plantilla[2:final], plantilla_ca)
-        return plantilla
+        plantilla_ca = self.plant_ca(plantilla, self.idioma_original)
+        if plantilla_ca.startswith(u'No'):
+            return plantilla
+        elif plantilla_ca.startswith(u'Pl'):
+            return
+        return plantilla_ca
 
     def plant_ca(self, plantilla, idioma):
         """Cerca la plantilla a ca:viquipedia respecte la plantilla original"""
         print u'* Cercant la plantilla en català *'
-        plantilla = plantilla[2:-2]
-        plantilla = plantilla.split(u'|')
-        if plantilla[0].find(u'#') != -1:
+        plantilla_ori = plantilla[2:-2]
+        if plantilla_ori.find(u'|') != -1:
+            plantilla_ori = plantilla_ori.split(u'|')
+        else:
+            plantilla_ori = [plantilla_ori]
+        if plantilla_ori[0].find(u'#') != -1:
             return u'No és una plantilla'
+        elif plantilla_ori[0].find(u'REF') != -1:
+            plantilla_ori = re.sub(r'\sREF.+', u'',plantilla_ori[0])
+        else:
+            plantilla_ori = plantilla_ori[0]
         dicc_id = {u'en' : u'Template:',
                    u'fr' : u'Modèle:',
                    u'es' : u'Plantilla:',
-                   u'de' : u'Vorlage:'
-                   }
-        if plantilla[0].startswith(self.ordena[idioma]):
-            missatge = u"Aquesta és la plantilla d'ordenació."
+                   u'pt' : u'?:',
+                   u'oc' : u'?'}
+
+        if plantilla[2:-2].startswith(self.ordena[idioma]):
+            missatge = u"Plantilla d'ordenació."
             return missatge
-        nom = plantilla[0].rstrip()
+        print u'{{'+plantilla_ori+u'}}'
+        nom = plantilla_ori.rstrip()
         nom = nom.lstrip()
-        pagina = dicc_id[idioma]+nom+u'/doc'
-        try:
-            pagina_plantilla= wikipedia.Page(idioma,pagina)
-            plantilla_ori = pagina_plantilla.get()
-        except:
-            pagina = dicc_id[idioma]+nom
-            pagina_plantilla= wikipedia.Page(idioma,pagina)
-            try:
-                plantilla_ori = pagina_plantilla.get()
-            except:
-                plantilla_ori = ''
-            print u"Aquesta plantilla no té pàgina d'ús"
+        pagina = dicc_id[idioma]+nom
+        plantilla_ori = self.redireccions(pagina+u'/doc', self.idioma_original)
+        if plantilla_ori == '':
+            plantilla_ori = self.redireccions(pagina, self.idioma_original)
         inici = plantilla_ori.find(u'[[ca:')
         if inici == -1:
             missatge = u'No existeix la plantilla en català'
             print missatge
         else:
+            print u'Trobada la plantilla en català'
             final = plantilla_ori.find(u']]',inici)
-            missatge = plantilla_ori[inici:final+2]
+            plantilla_ca = plantilla_ori[inici+15:final]
+            missatge = plantilla.replace(nom, plantilla_ca)
         return missatge
 
     def gestiona_taules(self, taula):
+        """Gestiona les taules"""
         print u'* GESTIONANT TAULA *'
         taula = taula.replace(u'{|', u' INICI ')
         taula = taula.replace(u'|}', u' FINALMENT ')
@@ -353,6 +355,19 @@ class Gestio:
         taula = taula.replace(u' ADMIRACIO ' , u'!')
         return taula
 
+    def redireccions(self, pagina, idioma):
+        try:
+            pagina_trobada = wikipedia.Page(idioma,pagina)
+            text_pagina = pagina_trobada.get(pagina_trobada)
+        except wikipedia.IsRedirectPage:
+            text_redirect = pagina_trobada.get(get_redirect=True)
+            text_redirect = re.findall(r'\[\[.+?\]\]', text_redirect)[0][2:-2]
+            pagina_redirect = wikipedia.Page(idioma,text_redirect)
+            text_pagina = pagina_redirect.get(get_redirect=True)
+        except wikipedia.NoPage:
+            return ''
+        return text_pagina
+
 ########################################
 # ACABA PROCESSA LA DIVERSITAT DE CODI #
 ########################################
@@ -371,19 +386,22 @@ class Diccionaris:
         self.idioma_original = plantilla[1].lower()
         self.titol_original = plantilla[2]
         for valor in plantilla:
+            par +=1
             print valor
-            if valor.count(u'--[[Usuari:') != 0:
+            print type(valor )
+            if valor.find(u'--[[Usuari:') != -1:
                 marca = u'[[Usuari:'
                 inici = valor.find(marca)
                 valor = valor[inici+len(marca):]
-                self.usuari_peticio = valor
                 print valor
-                raw_input('Seguim')
-            elif valor.count(u'([[Usuari Discussió:') != 0:
+                self.usuari_peticio = valor
+            elif valor.find(u'[[Usuari Discussió:') != -1:
                 inici = valor.find(u'Usuari Discussió:')
+                print valor[inici:]
                 self.discussio_usuari = valor[inici:]
-                print self.discussio_usuari
-                raw_input('Seguim')
+            print par
+        if self.discussio_usuari == '':
+            print u"¿?¿? ATENCIÓ, NO ES PODRÁ DEIXAR L'AVÍS A L'USUARI DE LA PETICIÓ ¿?¿?"
         self.passos(plantilla, u'Plantilla de peticio de traduccio')
 
     def ordena_diccionari(self, dicc, count=0):
@@ -401,6 +419,7 @@ class Diccionaris:
                 dicc[valor] = nou_text
             elif valor.startswith(self.cerques[1][-1][:-3]): # Enllaços de text
                 nou_enllac = self.gestiona_enllac(nou_text)
+                print nou_enllac
                 dicc[valor] = nou_enllac
             elif valor.startswith(self.cerques[2][-1][:-3]): # Enllaços web
                 print u'* PROCESSANT ENLLAÇ WEB *'
@@ -408,7 +427,6 @@ class Diccionaris:
                 nou_text = nou_text.replace(nou_text[inici:-1], self.traductor(nou_text[inici:-1]))
                 dicc[valor] = nou_text
             elif valor.startswith(self.cerques[3][-1][:-3]): # Plantilles
-                print nou_text
                 nou_text = self.gestiona_plantilles(nou_text, valor)
                 dicc[valor] = nou_text
             elif valor.startswith(self.cerques[4][-1][:-3]): # Referències úniques
@@ -485,11 +503,16 @@ class PreCercaSubst:
                     comm = int(comm)
                     comm += 1
                     continue
+
+                elif valor.startswith(self.diccionari_cat[self.idioma_original]):
+                    break
+
                 elif valor is u'':
                     print u'Què passa aqui?', ref
                     print inici, final+len(final_m)
                     print text[inici-40:inici+80]
                     break
+
                 else:
                     text = text.replace(valor, ref %(par), 1)
                     dicc_refs[ref %(par)] = valor
@@ -509,7 +532,7 @@ class PreCercaSubst:
 
 class Text:
 
-    def canviar_text(self, text, inici=0, cap=1, x=0, text_trad='', text_final='', ncodi=0):
+    def canviar_text(self, text, inici=0, cap=0, x=0, text_trad='', text_final='', ncodi=0):
         """Gestiona el text de forma que neteja el possible codi que pugui dificultar la traducció"""
         llista_net = []
         capitol_trad = []
@@ -518,8 +541,13 @@ class Text:
         self.passos(text, u'Aquest es el text a traduir:\n\n')
         text_ori = re.split(r'\n\n', self.text)
         for capitol in text_ori:
+            cap += 1
+            if capitol.find(self.ordena[self.idioma_original]) != -1:
+                continue
+            if capitol.find(self.diccionari_cat[self.idioma_original]) != -1:
+                continue
             capitol_ori = capitol
-            print u'*** NETEJA DE CAPITOL ***'
+            print u'*********************************\n*** NETEJA DE CAPITOL '+str(cap)+u'/'+str(len(text_ori))+u' ***\n*********************************'
             print capitol
             capitol = capitol.replace(u'\n*', u'\n* ') # La llista no numerada ha de contenir un espai entre l'asterisc i la frase...
             capitol = capitol.replace('*', ' ASTR ')
@@ -537,6 +565,7 @@ class Text:
                 self.passos(valor + u'\n' + estil, u'Codi no traduible' )
             codi = re.findall(r'<math>.+?</math>',capitol)
             ncodi = 0
+
             for mates in codi:
                 ncodi = str(ncodi).zfill(4)
                 valor = u' REFWM%s ' %(ncodi)
@@ -544,25 +573,42 @@ class Text:
                 self.refs[valor] = mates
                 ncodi = int(ncodi) + 1
                 self.passos(valor + u'\n' + mates, u'Codi de formules matematiques' )
-            self.text_trad = self.cerca(capitol)
+            if self.idioma_original == u'en':
+                llista3 = re.findall(r'(\d*?)(\w*?\s[toand]?)(\d*)(\w*\scentur[yie]s?\s)(\w*)', capitol)
+                for segles in llista3:
+                    primer = segles[0]
+                    segon = segles[2]
+                    tercer = segles[4]
+                    regex = segles[0]+segles[1]+segles[2]+segles[3]+segles[4]
+                    if tercer == 'AD':
+                        crist = ' d.C.'
+                    elif tercer == 'BC':
+                        crist = ' a.C.'
+                    else:
+                        crist = ' '+tercer
 
+                    if primer == '':
+                        capitol = capitol.replace(regex, 'segle '+self.romans(segon)+crist)
+                    else:
+                        capitol = capitol.replace(regex, 'segles '+self.romans(primer)+'-'+self.romans(segon)+crist)
+            self.text_trad = self.cerca(capitol)
             self.ordena_diccionari(self.refs)
             self.passos(self.text_trad, u'Aquest es el paragraf preparat per traduir:\n\n************************************************************************************************************************\n\n')
-
             paragraf = unicode(self.traductor(self.text_trad)+u'\n\n'.decode('utf-8'))
-            self.passos(capitol_ori, u'Angles original\n')
-            self.passos(self.text_trad, u'Angles processat\n')
+            self.passos(capitol_ori, u'Original\n')
+            self.passos(self.text_trad, u'Original processat\n')
             self.passos(paragraf, u'Catala processat\n')
             paragraf = paragraf.replace(u'*REF',u'REF')
-            no_trad = re.findall(r'\*\w+[\S]',paragraf)
+            no_trad = re.findall(r'\*\w+\s',paragraf)
             self.passos(no_trad, u'Llista de paraules no traduides')
             for paraula in no_trad:
-                print paraula
                 self.passos(paraula, u'Paraula no traduida')
-                if paraula not in self.llista_no_trad:
-                    print paraula
-                    self.passos(paraula, u"Aquesta paraula no s'havia trobat fins ara")
-                    self.llista_no_trad.append(paraula)
+                if paraula[1:].istitle:
+                    pass
+                else:
+                    if paraula not in self.llista_no_trad:
+                        self.passos(paraula, u"Aquesta paraula no s'havia trobat fins ara")
+                        self.llista_no_trad.append(paraula)
             self.passos(self.llista_no_trad, u'Llista de paraules que Apertium no tradueix')
             if paragraf.find('REF') != -1:
                 text = self.refer_text(paragraf)
@@ -570,9 +616,10 @@ class Text:
                 print u"* NO S'HAN TROBAT REF PER CANVIAR *"
                 text = paragraf
             while text.find('REF') != -1:
+                text = text.replace(u'*', u'')
                 print '*** ENCARA HI HA REF PER CANVIAR ***'
                 text = self.refer_text(text)
-            print '*** ACABAT ***\n'
+            print '**************\n*** ACABAT ***\n**************\n'
             text = text.replace(u'*', u'')
             text = text.replace(u' ASTR ', u'*')
             text = text.replace(u" ''' ",u"'''")
@@ -583,6 +630,9 @@ class Text:
             text_final += capitol_ori + u'\n\n' + text
             x += 1
             self.refs = {}
+            self.dicc_enllac = {}
+            print u'========================\n== Original ==\n========================\n'+capitol_ori
+            print u'========================\n== Traducció ==\n========================\n'+text
         while text_final.find(u'  ') != -1:
             text_final = text_final.replace(u'  ', u' ')
         #while text_final.find(u'\n ') != -1:
@@ -594,12 +644,10 @@ class Text:
     def refer_text(self, text):
         """Canvia les referències de codi REF...... pel valor corresponent del diccionari self.refs"""
         print u'*** REFENT EL TEXT ***'
-        marca = re.findall(r'REF\w+\d+?', text)
+        marca = re.findall(r'REF\w+\d+?\s', text)
         for ref in marca:
-            ref1 = u' '+ref+u' '
-            print ref1
-            text = text.replace(ref, self.refs[ref1])
-            self.passos(self.refs[ref1], 'Canvi en el text: '+str(ref))
+            text = text.replace(u' '+ref, self.refs[u' '+ref])
+            self.passos(self.refs[u' '+ref], 'Canvi en el text: '+str(ref))
         return text
 
 ##########################
@@ -612,9 +660,8 @@ class Text:
 
 class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Canvis):
 
-    def arrenca(self):
-        """Només mostra aquest començament quan arrenca el bot desde consola.
-        Apartat completament suprimible... però queda tant bufó... :P """
+    def arrenca(self,gravar_viqui=False):
+        resposta = u'supercalifragilisticoespialidoso'
         print
         print u'////////////////////////////'.center(150)
         print u'///**********************///'.center(150)
@@ -622,7 +669,16 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         print u'///**********************///'.center(150)
         print u'////////////////////////////'.center(150)
         print
-        self.inici()
+        while resposta != 's' and resposta != 'n' and resposta != '':
+            resposta = raw_input(u'Grabem a la viqui?')
+            if resposta == 's':
+                gravar_viqui = True
+            elif resposta == 'n':
+                gravar_viqui = False
+            elif resposta == '':
+                resposta = 'n'
+                gravar_viqui = False
+        self.inici(gravar_viqui=gravar_viqui)
 
     def variables(self):
         """Definim les variables globals"""
@@ -652,17 +708,20 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
                     u'g_par4' : '',
                     u'h_par5' : '',
                     u'i_par6' : ''}
-        self.diccionari_cat = {u'en' : u'[[Category',  # Diccionari per gestionar les categories
-                               u'es' : u'[[Categoría', #... en els diferents idiomes possibles de traducció
-                               u'fr' : u'[[Catégorie',
-                               u'de' : u'[[Kategorie'}
+        self.diccionari_cat = {u'en' : u'[[Category:',  # Diccionari per gestionar les categories
+                               u'es' : u'[[Categoría:', #... en els diferents idiomes possibles de traducció
+                               u'fr' : u'[[Catégorie:',
+                               u'pt' : u'[[?:',
+                               u'oc' : u'[[?:'}
         self.ordena = { u'en' : u'DEFAULTSORT', # Diccionari per gestionar la plantilla {{ORDENA ...
                         u'es' : u'ORDENAR',     #... en els diferents idiomes de traducció
                         u'fr' : u'DEFAULTSORT'}
         self.cops_k_passa = 0 # Variable global que gestiona el nombre amb que es registra un procés a l'arxiu registre.txt
-        self.llista_no_trad = []
+        self.llista_no_trad = [u'*ASTR']
+        self.dicc_enllac = {}
 
-    def inici(self, peticions=2, gravar_viqui=False, proves=True):
+    def inici(self, peticions=1, gravar_viqui=True, proves=True):
+        print gravar_viqui
         """Comença el programa.
         Els arguments que accepta la funció són:
         1.- peticions: el nombre de la primera petició.
@@ -672,7 +731,6 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         3.- proves: Mentre estigui en fase de proves no es borrarà la plantilla de petició
             i es posarà el text a la viqui en una pàgina de proves expressa
             per anar provant el bot. True per defecte"""
-        gravar_viqui = raw_input(u"Per defecte els canvis no seran gravats a la viqui.\nEn cas que es vulgui gravar el resultat de la traducció automàticament haureu d'escriure 'True' en aquesta pregunta:\n** Vols gravar els canvis a la pàgina corresponent de la viquipèdia? **:\nTrue/[False]".encode('utf-8'))
         projecte = wikipedia.getSite()
         cat = catlib.Category(projecte, u"Categoria:Peticions de còpia i preprocés per traducció automàtica")
         pagines = cat.articles()
@@ -681,16 +739,14 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
             titol = pagina.title()
             print '*********************************************************************************************************************************'
             print '*********************************************************************************************************************************'
-            print  (u'*****  '+str(peticions)+u'.- COMENCA EL PROCES  per la peticio que es troba a ->'+unicode(titol)+u'  *****').center(118)
+            print  (u'*****  '+str(peticions)+u'.- COMENCA EL PROCES  per la peticio que es troba a -> '+unicode(titol)+u'  *****').center(118)
             print '*********************************************************************************************************************************'
             print '*********************************************************************************************************************************'
             self.titol = titol.encode('utf-8')
             print pagina #Pàgina que té la petició de traducció
             text_ca = pagina.get()
             self.peticio(text_ca)
-            pagina_trad = wikipedia.Page(self.idioma_original,self.titol_original)
-            print pagina_trad
-            self.text_trad = pagina_trad.get()
+            self.text_trad = self.redireccions(self.titol_original,self.idioma_original)
             print u"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
             print (u"% EL REGISTRE ES TROBA A registre-"+unicode(self.titol_original)+".txt %").center(90)
             print u"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"
@@ -698,15 +754,24 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
             print u'\n****************************************'
             print u'********** ACABADA LA PETICIÓ **********'
             print u'****************************************\n'
-            if gravar_viqui:
+            if gravar_viqui == True:
                 pagina_final = u'Usuari:Anskarbot/Traduccions/'+unicode(self.titol_original)
-                self.proves = proves
+                if proves == True:
+                    enllac_pagina = u'[['+pagina_final+u'|aquesta pàgina de proves]]'
+                    missatge_bot = u'Anskarbot EN FASE DE PROVES '
+                else:
+                    enllac_pagina = u'[['+pagina_final+u']]'
+                    missatge_bot = u'Anskarbot '
                 pagina_gravar = wikipedia.Page(u'ca',pagina_final)
-                pagina_gravar.put(text, u"Anskarbot EN FASE DE PROVES generant una nova traducció automàtica", minorEdit = False, force=True)
-                self.avisar_usuari(pagina_final)
+                pagina_gravar.put(text, missatge_bot + u"generant una nova traducció automàtica", minorEdit = False, force=True)
+                index = u'Usuari:Anskarbot/Traduccions'
+                index = wikipedia.Page(u'ca',index)
+                contingut_index = index.get()
+                index.put(contingut_index+u'\n* [[/'+self.titol_original+']]. {{u|'+self.usuari_peticio+u'}}\n', missatge_bot + u"creant l'índex de les traduccions fetes", minorEdit=False, force=True)
+                self.avisar_usuari(pagina_final, enllac_pagina, missatge_bot)
                 self.passos(pagina_final, u'Pagina on es grava el text:')
                 self.paraules(self.idioma_original)
-            if proves:
+            if proves == True:
                 raw_input('Seguim?')
             peticions +=1
         print u'\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
@@ -714,11 +779,12 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         print u'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
         return 0
 
-try:
-    app = Amical()
-    app.arrenca()
-finally:
-    wikipedia.stopme()
+if __name__ == "__main__":
+    try:
+        app = Amical()
+        app.arrenca()
+    finally:
+        wikipedia.stopme()
 
 ####################
 # THAT'S ALL FOLKS #
