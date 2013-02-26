@@ -740,8 +740,6 @@ class Text:
         text_ori = re.split(r'\n\n', self.text)
         for capitol in text_ori:
             cap += 1
-            if cap < len(text_ori)-2:
-                continue
             if capitol.find(self.ordena[self.idioma_original]) != -1:
                 print "Ha trobat l'ordena"
                 capitol = re.sub(r'\{\{%s.*?\}\}' %self.ordena[self.idioma_original], '', capitol)
