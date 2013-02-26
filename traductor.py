@@ -317,7 +317,7 @@ class Gestio:
         print u'* PROCESSANT UNA PLANTILLA *'
         plantilla_titol = u'Template:'+plantilla[2:-2].split('|')[0].strip()
         print plantilla_titol
-        pagina = wikipedia.Page(self.idioma_original,plantilla_titol)
+        pagina = wikipedia.Page(self.idioma_original,plantilla_titol+u"/doc")
         print pagina
         plantilla_ca = self.cerca_interwiki(pagina,'ca')
         print plantilla_ca
@@ -346,16 +346,11 @@ class Gestio:
             plantilla_ori = re.sub(r'\sREF.+', u'',plantilla_ori[0])
         else:
             plantilla_ori = plantilla_ori[0]
-        dicc_id = {u'en' : u'Template:',
-                   u'fr' : u'Modèle:',
-                   u'es' : u'Plantilla:',
-                   u'pt' : u'?:',
-                   u'oc' : u'?'}
 
         print u'{{'+plantilla_ori+u'}}'
         nom = plantilla_ori.rstrip()
         nom = nom.lstrip()
-        pagina = dicc_id[idioma]+nom
+        pagina = self.dicc_id[idioma]+nom
         plantilla_ori = self.redireccions(pagina+u'/doc', self.idioma_original)
         if plantilla_ori == '':
             plantilla_ori = self.redireccions(pagina, self.idioma_original)
@@ -655,6 +650,28 @@ class IW:
         print pagiw
         return pagiw # Retorna objecte Page o res
 
+    def treuInterviquis(self,pagina,text):
+        text = text
+        print "* NETEJANT INTERVIQUIS *"
+        iws = pagina.interwiki()
+        for iw in iws:
+            iw = unicode(iw)
+            text = text.replace(iw,'')
+        return text
+
+    def posaInterviquis(self,pagina):
+        interviquis = ''
+        iws_final = []
+        iws = pagina.interwiki()
+        for iw in iws:
+            iw = unicode(iw)
+            iws_final.append(iw)
+        iws_final.append(u"[["+self.idioma_original+u":"+self.titol_original+u"]]")
+        iws = iws_final.sort()
+        for iw in iws_final:
+            interviquis += iw+u"\n"
+        return interviquis
+
 ##########################
 # ACABA CERCA INTERWIKIS #
 ##########################
@@ -685,16 +702,22 @@ class Categories:
                 categories_pare = []
             p += 1
 
-    def cerca_cat_ca(self, n=1,p=1,cat_ca='', categories_ca=[],parents=[],categories_pare=[]):
+    def cerca_cat_ca(self, n=1,p=1,cat_ca='', categories_ca=[],parents=[],categories_pare=[],limit=3):
         pagina = wikipedia.Page(self.idioma_original,self.titol_original)
         wiki_ca = wikipedia.Site(u'ca')
         try:
             categories = pagina.categories()
-        except wikipedia.IsRedirect:
+        except wikipedia.IsRedirectPage, arg:
             print 'a veure què fa?'
+            pag_red = wikipedia.Page(pagina.site(),arg[0])
+            print pag_red
+            self.cerca_cat_ca(wikipedia.Page(self.idioma_original,pag_red.title()), 'ca')
         for categoria in categories:
+            print str(n)+"/"+str(p)+u"-"+str(len(categories))
+            print categoria
             iws = categoria.interwiki()
             for y in iws:
+                print y
                 if y.site() == wiki_ca:
                     if u"[[ca:"+y.title()+']]\n' not in categories_ca:
                         if y.title() not in self.llista_parents:
@@ -707,14 +730,16 @@ class Categories:
                                 categories_ca.append(u"[["+y.title()+u']]\n')
                                 self.passos(unicode(categoria.title())+u'\n'+y.title(),u'Categoria original i categoria en catala')
             supercategories = categoria.categories()
-            if n < 3:
+            if n < limit:
                 categories_pare.extend(supercategories)
             if p == len(categories):
                 n += 1
                 categories.extend(categories_pare)
                 categories_pare = []
-                if n == 3 and categories_ca != []:
+                if n == limit and categories_ca != []:
                     break
+                if n == limit and categories_ca == []:
+                    limit += 1
             p += 1
         for x in categories_ca:
             cat_ca += x
@@ -730,16 +755,22 @@ class Categories:
 
 class Text:
 
-    def canviar_text(self, text, inici=0, cap=0, text_trad='', text_final='', ncodi=0):
+    def canviar_text(self, text, inici=0, cap=0, text_trad='', ncodi=0):
         """Gestiona el text de forma que neteja el possible codi que pugui dificultar la traducció"""
         llista_net = []
         capitol_trad = []
         llista_notrad = []
+        text_final = u"{{Notes de traducció}}\n\n"
+        text = self.treuInterviquis(wikipedia.Page(self.idioma_original,self.titol_original),text)
+        while text.find(u"\n\n\n") != -1:
+            text = text.replace(u"\n\n\n",u"\n\n")
         self.text = text
         self.passos(text, u'Aquest es el text a traduir:\n\n')
         text_ori = re.split(r'\n\n', self.text)
         for capitol in text_ori:
             cap += 1
+#            if cap < len(text_ori)-2:
+#                continue
             if capitol.find(self.ordena[self.idioma_original]) != -1:
                 print "Ha trobat l'ordena"
                 capitol = re.sub(r'\{\{%s.*?\}\}' %self.ordena[self.idioma_original], '', capitol)
@@ -876,7 +907,7 @@ class Text:
             text_final = text_final.replace(u'  ', u' ')
         #while text_final.find(u'\n ') != -1:
             #text_final = text_final.replace(u'\n ', u'\n')
-        text_final = text_final+u'\n[['+self.idioma_original+u':'+self.titol_original+u"]]\n\n==Notes de traducció==\n*Les plantilles en vermell són les plantilles que no s'han pogut trobar la corresponent plantilla en català. Això no vol dir que la plantilla no existeixi, sino que no s'ha pogut trobar automàticament, ja sigui per que no hi ha el corresponent enllaç interviqui, o per que realment no existeix la plantilla en català. En cas que trobeu la plantilla corresponent us agrairia que li posesiu el seu enllaç interviqui a la plantilla en anglès per poder trobar-la en properes traduccions. Gràcies. --~~~~\n\n*Podeu comentar possibles millores en el bot de traducció en [[Usuari:Anskarbot/Errors|aquesta pàgina]]. --~~~~\n\n*Les paraules que el programa [[Apertium]] encara no tradueix queden registrades automàticament. Si trobeu alguna millora en la traducció podeu expresar-ho a la mateixa [[Usuari:Anskarbot/Errors|pàgina d'errors]]. --~~~~"
+        text_final = text_final+self.posaInterviquis(wikipedia.Page(self.idioma_original,self.titol_original))+u"\n\n==Notes de traducció==\n*Les plantilles en vermell són les plantilles que no s'han pogut trobar la corresponent plantilla en català. Això no vol dir que la plantilla no existeixi, sino que no s'ha pogut trobar automàticament, ja sigui per que no hi ha el corresponent enllaç interviqui, o per que realment no existeix la plantilla en català. En cas que trobeu la plantilla corresponent us agrairia que li posesiu el seu enllaç interviqui a la plantilla en anglès per poder trobar-la en properes traduccions. Gràcies. --~~~~\n\n*Podeu comentar possibles millores en el bot de traducció en [[Usuari:Anskarbot/Errors|aquesta pàgina]]. --~~~~\n\n*Les paraules que el programa [[Apertium]] encara no tradueix queden registrades automàticament. Si trobeu alguna millora en la traducció podeu expresar-ho a la mateixa [[Usuari:Anskarbot/Errors|pàgina d'errors]]. --~~~~"
         self.passos(text_final,u'\n***************\n** Text finalitzat **\n***************\n')
         return text_final
 
@@ -961,6 +992,11 @@ class Amical(Text,PreCercaSubst,Diccionaris,Gestio,Registre,Traductor,Avisos,Can
         self.dicc_cat = {}
         self.llista_parents = []
         self.no_trad = []
+        self.dicc_id = {u'en' : u'Template:',
+                   u'fr' : u'Modèle:',
+                   u'es' : u'Plantilla:',
+                   u'pt' : u'?:',
+                   u'oc' : u'?'}
 
     def inici(self, peticions=1, gravar_viqui=True, proves=True):
         print gravar_viqui
