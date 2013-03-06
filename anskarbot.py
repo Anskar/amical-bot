@@ -7,6 +7,10 @@ import subprocess
 import sys
 import pywikibot
 import string
+<<<<<<< HEAD
+=======
+import uberref
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 
 class Proves:
     """
@@ -67,6 +71,10 @@ class Maquillatge:
             divisio_anterior = divisio
             nombre = nombre - (divisio*marca)
             romans += unicode(divisio*dicc[marca])
+<<<<<<< HEAD
+=======
+        print romans
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         return romans
 
     def segles(self,text):
@@ -103,6 +111,11 @@ class Maquillatge:
         text = text
         if self.prova_maquillatge == False: return text
         print "* PROCESSANT ELS ERRORS CONEGUTS ABANS DE LA TRADUCCIÓ *"
+<<<<<<< HEAD
+=======
+        uberref.main()
+
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         if self.idioma_original == 'en': text = self.segles(text)
         text = self.pagina_re(text,self.canvis_pre)
         return text
@@ -131,6 +144,7 @@ class Wiki:
             falta = ''
 
         print "* GRAVANT L'ARTICLE A LA VIQUI *"
+<<<<<<< HEAD
         if self.titol_escollit:
             if u'/' in self.titol_escollit:
                 pagina = self.titol_escollit
@@ -138,6 +152,9 @@ class Wiki:
                 pagina = u'Usuari:Anskarbot/Traduccions/'+self.titol_escollit
         else:
             pagina = u'Usuari:Anskarbot/Traduccions/'+self.titol_original
+=======
+        pagina = u'Usuari:Anskarbot/Traduccions/'+self.titol_escollit
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         enllac_pagina = u"[["+pagina+u"|aquesta pàgina de proves]]"
         pagina = wikipedia.Page('ca',pagina)
         pagina.put(text,u"Anskarbot editant un article traduït",minorEdit=False,force=True)
@@ -198,7 +215,11 @@ class Plantilles:
     def gestionaPlantilles(self,plantillatxt,j=-1):
         plantillatxt = plantillatxt
         if self.prova_plantilles == False: return plantillatxt
+<<<<<<< HEAD
         print u'** GESTIONANT PLANTILLA **'
+=======
+        print u'* GESTIONANT PLANTILLA *'
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         plantilla = self.textATupla(plantillatxt)
         llista_parametres = []
         parametres_ca = []
@@ -275,9 +296,18 @@ class Gestio:
     def gestiona_commons(self, enllac):
         """Gestiona els fitxers de commons"""
         print u'* PROCESSANT UN FITXER DE COMMONS *'
+<<<<<<< HEAD
         text_a_trad = re.search(r'[|]([^|]+)\]\]',enllac, re.UNICODE)
         if text_a_trad:
             text_traduit = self.traductor(text_a_trad.group(1))
+=======
+        print enllac
+        text_a_trad = re.search(r'[|]([^|]+)\]\]',enllac, re.UNICODE)
+        print text_a_trad.group(1)
+        if text_a_trad:
+            text_traduit = self.traductor(text_a_trad.group(1))
+            print text_traduit
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             text_traduit = text_traduit.replace('*', '')
             enllac = enllac.replace(text_a_trad.group(1),text_traduit)
         return enllac
@@ -286,6 +316,7 @@ class Gestio:
         """Gestiona els enllaços de text"""
         enllac = enllac
         if self.prova_enllacos == False: return enllac
+<<<<<<< HEAD
         print u'** PROCESSANT UN ENLLAÇ DE TEXT **'
         print enllac
         if u':' in enllac:
@@ -314,6 +345,96 @@ class Gestio:
                 enllac_final = u'[[:'+self.idioma_original+u':'+enllac_ori+u'|'+text_trad+u']]'
             else:
                 enllac_final = text_trad
+=======
+        print u'* PROCESSANT UN ENLLAÇ DE TEXT *'
+        if enllac.find(u':') !=-1:
+            return enllac
+        enllac = enllac[2:-2]
+        if enllac.find(u'|') != -1:
+            marca = enllac.split(u'|')
+            enllac_ori = marca[0]
+            text = marca[1]
+            text_trad = self.traductor(text)
+        else:
+            text = enllac
+            enllac_ori = enllac
+            text_trad = self.traductor(enllac)
+        print enllac_ori
+        try:
+            iws = wikipedia.Page(self.idioma_original,enllac_ori).interwiki()
+        except wikipedia.IsRedirectPage:
+            if wikipedia.Page(self.idioma_original,enllac_ori).get(get_redirect=True).find('#',5) != -1:
+                enllac_red = wikipedia.Page(self.idioma_original,enllac_ori).get(get_redirect=True)
+                enllac_ori = re.findall(r'\[\[(.+?)[#\|].*?\]\]',enllac_red, re.UNICODE)[0]
+            else:
+                enllac_red = wikipedia.Page(self.idioma_original,enllac_ori).get(get_redirect=True)
+                enllac_ori = re.findall(r'\[\[(.+?)\]\]',enllac_red, re.UNICODE)[0]
+                print enllac_ori
+                print 'Tractem aquesta excepció'
+            try:
+                iws = wikipedia.Page(self.idioma_original,enllac_ori).linkedPages()[0].interwiki()
+                print 'És una redirecció'
+            except:
+                print u'Ni punyetera idea què fer aqui :('
+                iws = ''
+        except wikipedia.NoPage:
+            print 'Enllaç vermell'
+            return text_trad
+        except:
+            return text_trad
+        enllac_final = u''
+        try:
+            print 'Això hauria de funcionar'
+            iw = [x for x in iws if iw.title().find(u'[[ca:') != -1][0]
+            enllac_trad = iw.titleWithoutNamespace()
+            text_trad = text_trad.replace(u'*',u'')
+            if text.istitle():
+                text_trad = text_trad.title()
+            elif text.isupper():
+                text_trad = text_trad.upper()
+            elif text.islower():
+                text_trad = text_trad.lower()
+            if enllac_trad.lower() == text_trad.lower():
+                enllac_final = u'[['+text_trad+']]'
+            else:
+                enllac_final = u'[['+enllac_trad+u'|'+text_trad+u']]'
+        except:
+            datasite = pywikibot.getSite(self.idioma_original)
+            datapage = pywikibot.Page(datasite, enllac_ori)
+            try:
+                dataiws = pywikibot.DataPage(datapage).interwiki()
+            except pywikibot.IsRedirectPage:
+                dataiws = pywikibot.DataPage(datapage).linkedPages()[0].interwiki()
+            except pywikibot.NoPage:
+                dataiws = ''
+            for iw in dataiws:
+                if unicode(iw.site()) == u'wikipedia:ca':
+                    enllac_trad = iw.title()
+                    text_trad = text_trad.replace(u'*',u'')
+                    if text.istitle():
+                        text_trad = text_trad.title()
+                    elif text.isupper():
+                        text_trad = text_trad.upper()
+                    elif text.islower():
+                        text_trad = text_trad.lower()
+                    if enllac_trad.lower() == text_trad.lower():
+                        enllac_final = u'[['+text_trad+']]'
+                    else:
+                        enllac_final = u'[['+enllac_trad+u'|'+text_trad+u']]'
+            if enllac_final == u'':
+
+                print u'Sembla que la pàgina en català no existeix'
+                if text.istitle():
+                    text_trad = text_trad.title()
+                elif text.isupper():
+                    text_trad = text_trad.upper()
+                elif text.islower():
+                    text_trad = text_trad.lower()
+                if self.tria_enllacos ==True:
+                    enllac_final = u"[[:"+self.idioma_original+u':'+enllac_ori+u'|'+text_trad+u']]'
+                else:
+                    enllac_final = text_trad
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         print enllac_final
         return enllac_final
 
@@ -366,6 +487,88 @@ class Gestio:
         taula = taula.replace(u' ADMIRACIO ' , u'!')
         return taula
 
+<<<<<<< HEAD
+=======
+    def redireccions(self, pagina, idioma,text=True):
+        try:
+            pagina = wikipedia.Page(idioma,pagina)
+            text_pagina = pagina.get()
+        except wikipedia.IsRedirectPage:
+            text_redirect = pagina_trobada.get(get_redirect=True)
+            text_redirect = re.findall(r'\[\[.+?\]\]', text_redirect)[0][2:-2]
+            pagina = wikipedia.Page(idioma,text_redirect)
+            text_pagina = pagina_redirect.get()
+        except wikipedia.NoPage:
+            print 'No existeix aquesta pàgina'
+            return ''
+        except:
+            print 'No sé com gestionar aquesta pàgina'
+            return ''
+        print text_pagina
+        if text == True: return text_pagina
+        else: return pagina
+
+    def gestiona_plantilles(self, plantilla):
+        """Gestiona les plantilles"""
+        print u'* PROCESSANT UNA PLANTILLA *'
+        plantilla_titol = self.titol_plantilles[self.idioma_original]+plantilla[2:-2].split('|')[0].strip()
+        print plantilla_titol
+        pagina = wikipedia.Page(self.idioma_original,plantilla_titol+self.us_plantilles[self.idioma_original])
+        print pagina
+        plantilla_ca = self.plant_ca(plantilla,self.idioma_original)
+        print plantilla_ca
+        if plantilla_ca:
+            print u'Trobada la plantilla en català'
+            print plantilla_ca
+            plantilla_ca = plantilla.replace(plantilla.split('|')[0].strip(), u"{{"+plantilla_ca.title())
+            print plantilla_ca
+            return plantilla_ca
+        else:
+            print u"No s'ha trobat la plantilla en català"
+            print plantilla
+            return plantilla
+
+    def plant_ca(self, plantilla, idioma):
+        """Cerca la plantilla a ca:viquipedia respecte la plantilla original"""
+        print u'* Cercant la plantilla en català *'
+        plantilla_ori = plantilla[2:-2]
+        if plantilla_ori.find(u'|') != -1:
+            plantilla_ori = plantilla_ori.split(u'|')
+        else:
+            plantilla_ori = [plantilla_ori]
+        if plantilla_ori[0].find(u'#') != -1:
+            return
+        elif plantilla_ori[0].find(u'REF') != -1:
+            plantilla_ori = re.sub(r'\sREF.+', u'',plantilla_ori[0])
+        else:
+            plantilla_ori = plantilla_ori[0]
+
+        print u'{{'+plantilla_ori+u'}}'
+        nom = plantilla_ori.rstrip()
+        nom = nom.lstrip()
+        pagina = self.titol_plantilles[idioma]+nom
+        plantilla_ori = self.redireccions(pagina+self.us_plantilles[self.idioma_original], self.idioma_original)
+        if plantilla_ori == '':
+            plantilla_ori = self.redireccions(pagina, self.idioma_original)
+        inici = plantilla_ori.find(u'[[ca:')
+        if inici == -1:
+            missatge = u'No existeix la plantilla en català'
+            return
+        else:
+            print u'Trobada la plantilla en català'
+            final = plantilla_ori.find(u']]',inici)
+            plantilla_ca = plantilla_ori[inici+15:final]
+            return plantilla_ca
+
+    def plantillaAText(self,plantilla):
+        plantilla_txt = u"{{"+plantilla[0]
+        for parametre in plantilla[1]:
+            parametre = parametre.replace('\n','')
+            plantilla_txt += u"|"+parametre+'\n'
+        plantilla_txt += u"}}"
+        return plantilla_txt
+
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 class Diccionaris:
 
     def ordena_diccionari(self, dicc, count=0,finalc=0):
@@ -464,6 +667,12 @@ class PreCercaSubst:
                 valor = text[inici:final+len(final_m)]
                 y = [x for x in self.commons.iterkeys() if x in valor]
                 if y != [] and valor.startswith(u'[['):
+<<<<<<< HEAD
+=======
+                    print comm
+                    print valor
+                    print x
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
                     ref = u' REFEC%s '
                     comm = str(comm).zfill(4)
                     text = text.replace(valor, ref %(comm))
@@ -489,13 +698,19 @@ class PreCercaSubst:
 class Interviqui:
 
     def cercaInterviquis(self,pagina,ca=True):
+<<<<<<< HEAD
         print u"* CERCANT ELS ENLLAÇOS INTERVIQUI *"
         if u'#' in pagina.title():
             pagina = wikipedia.Page(self.idioma_original,pagina.titleWithoutNamespace())
+=======
+        print pagina
+        print type(pagina)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         try:
             iws_pagina = pagina.interwiki()
             print 'Aquesta pagina esta a wikipedia'
         except wikipedia.IsRedirectPage, arg:
+<<<<<<< HEAD
             pagina = pagina.getRedirectTarget()
             print pagina
             iws_pagina = wikipedia.Page(self.idioma_original,arg[0]).interwiki()
@@ -512,6 +727,25 @@ class Interviqui:
                     text_pagina = pagina_doc.get()
                 except wikipedia.IsRedirectPage, arg:
                     print 'Es una redirecció'
+=======
+            iws_pagina = wikipedia.Page(self.idioma_original,arg[0]).interwiki()
+            print 'Es una redireccio'
+        except wikipedia.NoPage:
+            print 'Aquesta pàgina no existeix wikipedia?'
+            return
+        if iws_pagina == [] or iws_pagina == None:
+            print 'Pero sembla que no te els enllacos al text'
+            print pagina.title()
+            print type(pagina.title())
+            if pagina.title().find(u'Template:') != -1:
+                pagina_doc = wikipedia.Page(self.idioma_original,pagina.title()+'/doc')
+                print 'Busquem a la subpagina "/doc"'
+                print pagina_doc
+                try:
+                    text_pagina = pagina_doc.get()
+                except wikipedia.IsRedirectPage, arg:
+                    print 'Es una redireccio'
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
                     pagina_doc = wikipedia.Page(self.idioma,arg[0])
                     text_pagina = pagina_doc.get()
                 except:
@@ -523,6 +757,7 @@ class Interviqui:
                 else:
                     print 'Sembla que tampoc hi ha els iws en la pagina "/doc"'
             else:
+<<<<<<< HEAD
                 print 'No és una plantilla :)'
         else:
             for iw in iws_pagina:
@@ -549,6 +784,25 @@ class Interviqui:
                 return iws_pagina
         print u"No s'ha trobat la pàgina en català"
         return
+=======
+                print 'Que esta passant qui'
+            try:
+                iws_pagina = wikipedia.DataPage(pagina).interwiki()
+                print 'Trobada la wikidata'
+            except wikipedia.IsRedirectPage, arg:
+                iws_pagina = wikipedia.DataPage(self.idioma,arg[0]).interwiki()
+                print 'Es una redireccio'
+            except wikipedia.NoPage:
+                print 'Aquesta pàgina no existeix a wikidata'
+                return
+        for iw in iws_pagina:
+            if ca:
+                if iw.site().language() == 'ca':
+                    print iw
+                    return iw
+            else:
+                return iws_pagina
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 
     def treuInterviquis(self,pagina,text,llista_iw=''):
         text = text
@@ -562,10 +816,53 @@ class Interviqui:
         llista_iw += u"[["+self.idioma_original+u":"+self.titol_original+u"]]"
         llista_iw = llista_iw.split(u'\n')
         llista_iw.sort()
+<<<<<<< HEAD
         self.llista_iw = u'\n'.join(llista_iw)
         print u"Interviquis trovades al text:\n"+self.llista_iw
         return text
 
+=======
+        self.llista = u'\n'.join(llista_iw)
+        print u"Interviquis trvades al text:\n"+self.llista
+        return text
+
+class Pagines:
+
+    def paginesClau(self,pagina):
+        self.idioma_original = self.peticions[pagina][1][0]
+        print 56*u"*"+u"\nIdioma de traducció: \n*"+self.idioma_original
+        self.titol_original = self.peticions[pagina][1][1]
+        print u"Títol de la pàgina a traduir: \n*"+self.titol_original
+#        print self.peticions[pagina][1][2]
+        self.pagina_discussio_usuari = re.findall(ur'Usuari Discussió:\w+', self.peticions[pagina][1][2])[0]
+        self.usuari_peticio = re.findall(ur'Usuari:(\w+)', self.peticions[pagina][1][2])[0]
+        print u"Pàgina de discussió de l'usuari/a que demana la traducció: \n*"+self.pagina_discussio_usuari
+        try: self.pagina_regex = self.peticions[pagina][1][3]
+        except: pass
+        try:
+            if self.peticions[pagina][1][4].find(u'títol=') != -1:
+                self.titol_escollit = self.peticions[pagina][4].split()
+                missatge =  u"S'ha demanat aquest títol de pàgina provisional: \n*"
+            elif self.peticions[pagina][1][5].find(u'títol=') != -1:
+                self.titol_escollit = self.peticions[pagina][5].split()
+                missatge =  u"S'ha demanat aquest títol de pàgina provisional: \n*"
+            else:
+                self.titol_escollit = self.titol_original
+                missatge = u"El títol de la pàgina provisional coincideix amb el títol original."
+        except:
+            self.titol_escollit = self.titol_original
+            missatge = u"El títol de la pàgina provisional coincideix amb el títol original."
+        try:
+            if self.peticions[pagina][1][4].find(u'enllaços=') != -1:
+                self.tria_enllacos = True
+            elif self.peticions[pagina][1][5].find(u'enllaços=') != -1:
+                self.tria_enllacos = True
+        except:
+            self.tria_enllacos = False
+        print missatge+self.titol_escollit
+        print u"S'ha demanat conservar els enllaços originals?: \n*"+str(self.tria_enllacos)+u"\n"+56*u"*"
+
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 class Text:
 
     def preTrad(self, pagina,text_final='',cap=0):
@@ -584,6 +881,10 @@ class Text:
             text = pagina.get()
         except wikipedia.NoPage, arg:
             return u"No he sabut trobar la pàgina demanada. Sembla que "+arg[0]+u" no existeix en la viqui demanada. --~~~~"
+<<<<<<< HEAD
+=======
+        text_original = text
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         text = self.treuInterviquis(pagina,text)
         text = self.treuCategories(pagina,text)
         text = re.sub(r'%s.+\}\}\n' %self.dicc_ordena[self.idioma_original],'',text)
@@ -601,15 +902,25 @@ class Text:
                 continue
             capitol_ori = capitol
             cap += 1
+<<<<<<< HEAD
             #if cap < 44: # Opció de passar capítols quan
                 #continue # es vol fer alguna prova sobre un capítol concret ;)
+=======
+            #if cap < 8:
+                #continue
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             print u"********************\n********************\n* Capítol "+str(cap)+u"/"+str(len(capitols))+u" *\n********************\n********************"
             print "&&&&&&&&&&&&&&&&&&&\n&& TEXT ORIGINAL &&\n&&&&&&&&&&&&&&&&&&&"
             print capitol
             capitol = capitol.replace(u'\n*', u'\n* ') # La llista no numerada ha de contenir un espai entre l'asterisc i la frase...
             capitol = capitol.replace('*', ' ASTR ')
+<<<<<<< HEAD
             capitol = re.sub(r"'''", " NEGRETA ", capitol)
             capitol = re.sub(r"''", " CURSIVA ", capitol)
+=======
+            capitol = re.sub(r"(?!')''", " '' ", capitol)
+            capitol = re.sub(r"'''", " ''' ", capitol)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             capitol = re.sub(r'\n#',' SOSTINGUT ', capitol)
             capitol = re.sub(r'[$]', ' SIMBOLDOLLAR ', capitol)
             capitol = capitol.replace(u'&ndash;',u'–')
@@ -623,7 +934,11 @@ class Text:
                 capitol = capitol.replace(estil, valor)
                 self.refs[valor] = estil
                 ncodi = int(ncodi) + 1
+<<<<<<< HEAD
             codi = re.findall(r'<[Mm]ath>.+?</[Mm]ath>',capitol,flags=re.MULTILINE)
+=======
+            codi = re.findall(r'<[Mm]ath>.+?</[Mm]ath>',capitol,re.MULTILINE)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             ncodi = 0
             for mates in codi:
                 print '* CERCANT CODI LaTex *'
@@ -633,7 +948,11 @@ class Text:
                 print mates
                 self.refs[valor] = mates
                 ncodi = int(ncodi) + 1
+<<<<<<< HEAD
             codi = re.findall(r'(http://[\w./\~\+\-&=\?\d\#]+)',capitol)
+=======
+            codi = re.findall(r'(http://[\w./\~\+\-&=\?\d]+)',capitol)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             ncodi = 0
             for webs in codi:
                 print "* CERCANT URL's *"
@@ -644,7 +963,11 @@ class Text:
                 capitol = capitol.replace(webs, valor)
                 self.refs[valor] = webs
                 ncodi = int(ncodi) + 1
+<<<<<<< HEAD
             codi = re.findall(r'<[Cc]ode>.+?</[Cc]ode>',capitol,flags=re.MULTILINE)
+=======
+            codi = re.findall(r'<[Cc]ode>.+?</[Cc]ode>',capitol,re.MULTILINE)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             ncodi = 0
             for m_code in codi:
                 print '* CERCANT CODI *'
@@ -652,8 +975,16 @@ class Text:
                 valor = u' REFWZ%s ' %(ncodi)
                 capitol = capitol.replace(m_code, valor)
                 self.refs[valor] = m_code
+<<<<<<< HEAD
                 ncodi = int(ncodi) + 1
             fitxers = re.findall(r'<gallery>.+</gallery>', capitol,flags=re.DOTALL)
+=======
+                print m_code
+                ncodi = int(ncodi) + 1
+            fitxerst = []
+            fitxers = re.findall(r'<gallery>.+</gallery>', capitol,re.DOTALL)
+            print fitxers
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             ncodi = 0
             for m_code in fitxers:
                 print '* CERCANT FITXERS DE COMMONS DINS <gallery>*'
@@ -661,6 +992,10 @@ class Text:
                 valor = u' REFGC%s ' %(ncodi)
                 capitol = capitol.replace(m_code, valor)
                 self.refs[valor] = m_code
+<<<<<<< HEAD
+=======
+                print m_code
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
                 ncodi = int(ncodi) + 1
             if self.idioma_original == u'en' and capitol.find(u'entur') != -1:
                 capitol = self.segles(capitol)
@@ -691,8 +1026,13 @@ class Text:
             text = text.replace(u' ASTR ', u'*')
             text = text.replace(u' SIMBOLDOLLAR ', u'$')
             text = text.replace(u' SOSTINGUT ', u'\n#')
+<<<<<<< HEAD
             text = text.replace(u" CURSIVA ", u"''")
             text = text.replace(u" NEGRETA ",u"'''")
+=======
+            text = text.replace(u" '' ", u"''")
+            text = text.replace(u" ''' ",u"'''")
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             text = text.replace(u' ,', u',')
             text = text.replace(u' CLAUDATOROBERT ', u'{')
             text = text.replace(u' CLAUDATORTANCAT ', u'}')
@@ -722,7 +1062,13 @@ class Text:
         """Canvia les referències de codi REF...... pel valor corresponent del diccionari self.refs"""
         print u'*** REFENT EL TEXT ***'
         marca = re.findall(r'REF\w+\d+ ', text)
+<<<<<<< HEAD
         for ref in marca:
+=======
+        print text
+        for ref in marca:
+            print ref
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             text = text.replace(ref, self.refs[u' '+ref])
         return text
 
@@ -747,7 +1093,11 @@ class Categories:
         categories = pagina.categories()
         for categoria in categories:
             print categoria.title()
+<<<<<<< HEAD
             text = re.sub(r'\[\['+categoria.title()+r'(.+)?\]\]' , u'',text,flags=re.DOTALL|re.UNICODE)
+=======
+            text = re.sub(ur'\[\[%s.?\]\]\n'%categoria.title() , u'',text)
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
             categoria = u"\n[["+categoria.title()+u"]]"
             llista_cat += categoria
         llista_cat += u' -->'
@@ -829,7 +1179,11 @@ class Peticions:
                     p += 1
         if p > 1: peticions = u" peticions"
         else: peticions = u" petició"
+<<<<<<< HEAD
         print u"*** S'ha trobat "+str(p)+ peticions+u" de traducció ***"
+=======
+        print u"*** S'han trobat "+str(p)+ peticions+u" de traducció ***"
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 
     def treuPeticio(self, pagina):
         if self.prova_gravar_viqui == False: return
@@ -844,6 +1198,7 @@ class Peticions:
         text = text.replace(plantilla,'')
         wikipedia.Page('ca',unicode(pagina_txt[0])).put(text,u"Anskarbot traient la plantilla de traducció." ,minorEdit=False,force=True)
 
+<<<<<<< HEAD
     def paginesClau(self,pagina,missatge=''):
         self.titol_escollit=False
         self.idioma_original = self.peticions[pagina][1][0]
@@ -893,6 +1248,8 @@ class Peticions:
             print u"No s'ha demanat un títol específic"
         print u"S'ha demanat conservar els enllaços originals?: \n* "+str(self.tria_enllacos)+u"\n"+56*u"*"
 
+=======
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 class Pregunta:
 
     def pregunta(self,pregunta,resposta):
@@ -911,7 +1268,11 @@ class Pregunta:
                 passem = False
         return passem
 
+<<<<<<< HEAD
 class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,Categories,Apertium,Wiki,Maquillatge,Proves,Plantilles):
+=======
+class Inici(Pregunta,Peticions,Text,Pagines,Interviqui,PreCercaSubst,Diccionaris,Gestio,Categories,Apertium,Wiki,Maquillatge,Proves,Plantilles):
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
 
     def main(self):
         print
@@ -995,8 +1356,11 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
                             u'*i.*e.':u"per exemple"}
         # ALTRES VARIABLES
         self.cops_k_passa = 1
+<<<<<<< HEAD
         self.tria_enllacos = False
 
+=======
+>>>>>>> 88855721e54ca1b3945633e11cdc9f8b56dfcc91
         # LLISTES
         self.cerques =[(u'<!--',u'-->', u' REFCO%s '), # Llista de tuples que ...
                        (u'<' , u'>' , u' REFWC%s '),
