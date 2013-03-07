@@ -1,0 +1,5 @@
+Anskarbot.py v.1.01.04
+
+* Els enllaços queden traduits sense estar integrats a la frase, que es tradueix apart.
+* Hi ha marques de codi wiki després de "\n" que queden amb un espai al començament, i poden quedar dins una caixa.
+*Encara no està implementat les expressions regulars per poder polir la traducció.
