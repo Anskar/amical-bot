@@ -304,6 +304,12 @@ class Gestio:
         if enllac_ori.startswith(u'#'): return text_trad
         iws = wikipedia.Page(self.idioma_original,enllac_ori)
         pagina_ca = self.cercaInterviquis(iws)
+        if text.islower():
+            text_trad = text_trad.lower()
+        elif text.isupper():
+            text_trad = text_trad.upper()
+        elif text.istitle():
+            text_trad = text_trad.title()
         if pagina_ca:
             if text_trad.lower() == pagina_ca.titleWithoutNamespace().lower():
                 enllac_final = u'[['+text_trad+u']]'
@@ -707,7 +713,7 @@ class Text:
         while text_final.find(u'  ') != -1:
             text_final = text_final.replace(u'  ', u' ')
         categories = self.cercaCategories(pagina,text)
-        text_final += self.cat_original+u"\n\n"+categories+u"\n\n" + self.llista_iw
+        text_final += self.cat_original+u"\n\n"+categories+u"\n\n"
         while text_final.find(u'\n\n\n') != -1:
             text_final = text_final.replace(u'\n\n\n',u'\n\n')
         text_final = text_final.replace(u'==\n\n',u'==\n')
@@ -892,6 +898,7 @@ class Peticions:
         else:
             print u"No s'ha demanat un títol específic"
         print u"S'ha demanat conservar els enllaços originals?: \n* "+str(self.tria_enllacos)+u"\n"+56*u"*"
+        self.pregunta('Seguim?',False)
 
 class Pregunta:
 
