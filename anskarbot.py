@@ -445,11 +445,15 @@ class Diccionaris:
         pagina = u"Usuari:Anskarbot/Traduccions/"+idioma+u"/"+re_en_pagina
         titol = wikipedia.Page(u'ca',pagina)
         try: text = titol.get()
-        except: return
+        except:
+            print 'No hi ha pàgina regex a la wiki'
+            return
         llista = text.split(u'\n')
         for x in llista:
             diccionari = x.split(u';')
             for y in diccionari:
+                if y[0] == '':
+                    continue
                 valor,parametre = y[0],y[1]
                 self.canvis_post[valor] = parametre
 
@@ -633,6 +637,7 @@ class Text:
             capitol = re.sub(r'[$]', ' SIMBOLDOLLAR ', capitol)
             capitol = capitol.replace(u'&ndash;',u'–')
             capitol = capitol.replace(u'&mdash;', u'—')
+            capitol = capitol.replace(u'&nbsp;', u' UNIÓMOTS ')
             codi = re.findall(r'[\w]+=".+?"',capitol)
             ncodi = 0
             for estil in codi:
@@ -720,6 +725,7 @@ class Text:
             text = text.replace(u' ,', u',')
             text = text.replace(u' CLAUDATOROBERT ', u'{')
             text = text.replace(u' CLAUDATORTANCAT ', u'}')
+            text = text.replace(u' UNIÓMOTS ', u'&nbsp;')
             text = text.lstrip()
             while text.find(u'  ') != -1:
                 text = text.replace(u'  ', u' ')
@@ -756,11 +762,12 @@ class Text:
         enxel = re.findall(r'[eE]n (\d{1,4})',text)
         print enxel
         for data in enxel:
-            text = text.replace('en %' %data, 'el %' %data)
-            text = text.replace('En %' %data, 'El %' %data)
+            text = text.replace('en %s' %data, 'el %s' %data)
+            text = text.replace('En %s' %data, 'El %s' %data)
         self.muntaPaginaRE(self.pagina_regex,u'ca')
         self.muntaPaginaRE(u'regex',self.idioma_original)
-        text = self.errorsPost(text)
+        if self.canvis_post != {}:
+            text = self.errorsPost(text)
         text = self.paginaRe(text,self.commons)
         return text
 
@@ -966,6 +973,10 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
         self.llista_parents = []
         self.llista_iw = ''
         self.cat_original = []
+        self.canvis_post = {u"Veu també":u'Vegeu també',
+                            u'i.e.':u"per exemple",
+                            u'Temps de Nova York':u'New York Times',
+                            u'New York Estafis':u'New York Times'}
 
     def variables(self):
         # DICCIONARIS
@@ -1000,8 +1011,6 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
                                 u"pt" : u"Categoria",
                                 u"oc" : u"Categoria"}
         self.canvis_pre = {u"Anskar":u"Anskar"}
-        self.canvis_post = {u"Veu també":u'Vegeu també',
-                            u'i.e.':u"per exemple"}
         # ALTRES VARIABLES
         self.cops_k_passa = 1
         self.tria_enllacos = False
