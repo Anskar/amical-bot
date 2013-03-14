@@ -975,8 +975,12 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
         self.cat_original = []
         self.canvis_post = {u"Veu també":u'Vegeu també',
                             u'i.e.':u"per exemple",
-                            u'Temps de Nova York':u'New York Times',
-                            u'New York Estafis':u'New York Times'}
+                            u'NOTRADUIR002':u'Twentieth Century Fox',
+                            u'NOTRADUIR001':u'New York Times',}
+        self.canvis_pre = {u"New York Times":u" NOTRADUIR001 ",
+                           u"Twentieth Century Fox", u" NOTRADUIR002 "}
+
+
 
     def variables(self):
         # DICCIONARIS
@@ -1010,7 +1014,6 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
                                 u"es" : u"Categoría",
                                 u"pt" : u"Categoria",
                                 u"oc" : u"Categoria"}
-        self.canvis_pre = {u"Anskar":u"Anskar"}
         # ALTRES VARIABLES
         self.cops_k_passa = 1
         self.tria_enllacos = False
