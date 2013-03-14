@@ -978,7 +978,7 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
                             u'NOTRADUIR002':u'Twentieth Century Fox',
                             u'NOTRADUIR001':u'New York Times',}
         self.canvis_pre = {u"New York Times":u" NOTRADUIR001 ",
-                           u"Twentieth Century Fox", u" NOTRADUIR002 "}
+                           u"Twentieth Century Fox":u" NOTRADUIR002 "}
 
 
 
