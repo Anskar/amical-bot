@@ -439,12 +439,16 @@ class Diccionaris:
             elif valor.startswith(u' REFGC'): #Codi entre <gallery></gallery>
                 print u'* PROCESSANT FITXERS DE COMMONS DINS <gallery> *'
                 print nou_text
-                inicic = nou_text.find('|',finalc)
-                finalc = nou_text.find('\n', inicic)
-                text_peu = self.traductor(nou_text[inicic+1:finalc])
-                nou_text = nou_text.replace(nou_text[inicic+1:finalc],text_peu)
-                print nou_text
-                dicc[valor] = nou_text
+                llista = nou_text.split('\n')
+                text_final = u'<gallery>\n'
+                for llista_text in llista:
+                    if '|' in llista_text:
+                        inicic = nou_text.find('|',finalc)
+                        finalc = nou_text.find('\n', inicic)
+                        text_peu = self.traductor(nou_text[inicic+1:finalc])
+                        text_final += llista_text.replace(llista_text[inicic+1:finalc],text_peu)
+                text_final += u'</gallery>'
+                dicc[valor] = text_final
             elif valor.startswith(u' REFEC'): # Enllaços de commons
                 nou_text = self.gestiona_commons(dicc[valor])
                 dicc[valor] = nou_text
@@ -534,7 +538,7 @@ class Interviqui:
             print type(arg[0])
             iws_pagina = wikipedia.Page(self.idioma_original,arg[0]).interwiki()
             print 'Es una redirecció'
-        except wikipedia.NoPage:
+        except:
             print 'Aquesta pàgina no existeix a wikipedia?'
             return
         if iws_pagina == [] or iws_pagina == None:
