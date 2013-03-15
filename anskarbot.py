@@ -167,6 +167,14 @@ class Wiki:
         contingut_index = contingut_index.replace(u"|}",u'|-\n|* [['+pagina+']]||{{u|'+self.usuari_peticio+u'}}||{{subst:CURRENTDAY}}/{{subst:CURRENTMONTH}}/{{subst:CURRENTYEAR}}||{{subst:PAGESIZE:'+pagina+'|R}}||{{PAGESIZE:'+pagina+'|R}}\n|}')
         index.put(contingut_index, u"Anskarbot afegint la traducció a l'índex de les traduccions fetes", minorEdit=False, force=True)
 
+        print u"* AFEGINT LES PARAULES NO TRADUIDES *"
+        pagina_dicc = u"Usuari:Anskarbot/"+self.idioma_original
+        pagina = wikipedia.Page('ca',pagina_dicc)
+        text = pagina.get()
+        for x in self.no_trad:
+            text += u"*"+x+u"\n"
+        pagina.put(text,u"Anskarbot afegint les paraules no traduïdes")
+
 class Apertium:
 
     def traductor(self, text):
@@ -442,20 +450,21 @@ class Diccionaris:
                 dicc[valor] = nou_text
 
     def muntaPaginaRE(self, re_en_pagina, idioma):
-        pagina = u"Usuari:Anskarbot/Traduccions/"+idioma+u"/"+re_en_pagina
+        pagina = u"Usuari:Anskarbot/"+idioma+u"/"+re_en_pagina
         titol = wikipedia.Page(u'ca',pagina)
         try: text = titol.get()
         except:
             print 'No hi ha pàgina regex a la wiki'
             return
         llista = text.split(u'\n')
+        print llista
         for x in llista:
             diccionari = x.split(u';')
-            for y in diccionari:
-                if y[0] == '':
-                    continue
-                valor,parametre = y[0],y[1]
-                self.canvis_post[valor] = parametre
+            print diccionari
+            valor,parametre = diccionari[0],diccionari[1]
+            self.canvis_post[valor] = parametre
+        print self.canvis_post
+        self.pregunta('Com?',False)
 
 class PreCercaSubst:
 
@@ -521,7 +530,8 @@ class Interviqui:
             print 'Aquesta pagina esta a wikipedia'
         except wikipedia.IsRedirectPage, arg:
             pagina = pagina.getRedirectTarget()
-            print pagina
+            print pagina, arg[0]
+            print type(arg[0])
             iws_pagina = wikipedia.Page(self.idioma_original,arg[0]).interwiki()
             print 'Es una redirecció'
         except wikipedia.NoPage:
@@ -606,7 +616,7 @@ class Text:
             self.titol_original = pagina_red.title()
             text = pagina.get()
         except wikipedia.NoPage, arg:
-            return u"No he sabut trobar la pàgina demanada. Sembla que "+arg[0]+u" no existeix en la viqui demanada. --~~~~"
+            return u"No he sabut trobar la pàgina demanada. Sembla que "+str(arg[0])+u" no existeix en la viqui demanada. --~~~~"
         text = self.treuInterviquis(pagina,text)
         text = self.treuCategories(pagina,text)
         text = re.sub(r'%s.+\}\}\n' %self.dicc_ordena[self.idioma_original],'',text)
@@ -624,7 +634,7 @@ class Text:
                 continue
             capitol_ori = capitol
             cap += 1
-#            if cap < 5: # Opció de passar capítols quan
+#            if cap < 45: # Opció de passar capítols quan
 #                continue # es vol fer alguna prova sobre un capítol concret ;)
             print u"********************\n********************\n* Capítol "+str(cap)+u"/"+str(len(capitols))+u" *\n********************\n********************"
             print "&&&&&&&&&&&&&&&&&&&\n&& TEXT ORIGINAL &&\n&&&&&&&&&&&&&&&&&&&"
@@ -708,6 +718,7 @@ class Text:
                 print u"* NO S'HAN TROBAT REF PER CANVIAR *"
                 text = text_trad
             while u'REF' in text:
+                refrep += 1
                 text = text.replace(u'*', u' ')
                 print '*** ENCARA HI HA REF PER CANVIAR ***'
                 text = self.referText(text)
@@ -958,6 +969,9 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
             self.netejaVariables()
             self.paginesClau(peticio)
             text = self.preTrad(peticio)
+            if u"otes de traducc" not in text:
+                print text
+                continue
             self.article(text,peticio)
             self.treuPeticio(peticio)
             print u'****************************************'
@@ -973,6 +987,7 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
         self.llista_parents = []
         self.llista_iw = ''
         self.cat_original = []
+        self.no_trad = []
         self.canvis_post = {u"Veu també":u'Vegeu també',
                             u'i.e.':u"per exemple",
                             u'NOTRADUIR002':u'Twentieth Century Fox',
@@ -1031,6 +1046,7 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
 #                       (u'<div' , u'</div>' , u' REFSA%s '),           # per gestionar el diccionari de referències en l'ordre correcte
                        (u'<' , u'>' , u' REFWC%s '),                   # de forma qualsevol codi inserit dins un altre codi es gestioni primer el que es troba dins un altre,
                        (u'{|',u'|}', u' REFZT%s ')]                   # per això el comentari <!-- --> és el primer en gestionar-se i les taules {| }| l'últim de tots.
+        self.marques = [u' ASTR ',u' SIMBOLDOLLAR ',u' SOSTINGUT ',u" CURSIVA ", u" NEGRETA ",u' CLAUDATOROBERT ',u' CLAUDATORTANCAT ',u' UNIÓMOTS ']
 
 if __name__ == '__main__':
     try:
