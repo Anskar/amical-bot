@@ -460,6 +460,7 @@ class Diccionaris:
         except:
             print 'No hi ha pàgina regex a la wiki'
             return
+        text = re.sub(r'<!--.+-->','',text,flags=re.DOTALL)
         llista = text.split(u'\n')
         print llista
         for x in llista:
@@ -731,6 +732,7 @@ class Text:
             print '**************\n*** ACABAT ***\n**************'
             text = text.replace(u'*', u'')
             text = text.replace(u' ASTR ', u'*')
+            text = text.replace(u'\n *', u'\n*')
             text = text.replace(u'\n* *',u'\n**')
             text = text.replace(u'[ http:', u'[http:')
             text = text.replace(u' SIMBOLDOLLAR ', u'$')
