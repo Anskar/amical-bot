@@ -158,7 +158,7 @@ class Wiki:
         urlversio =wikipedia.Page(self.idioma_original,self.titol_original).permalink()
         versio = re.findall(r'oldid=(\d+)',urlversio)
         pagina_traduitde = wikipedia.Page('ca', pagina_traduitde)
-        pagina_traduitde.put(u'{{Traduït de|'+self.idioma_original+u'|'+self.titol_original+u'|{{subst:CURRENTDAY}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTYEAR}}|'+versio[0]+u'}}', u'Anskarbot incorporant la plantilla {{traduït de}} a la pàgina de discussió',minorEdit=False, force=True)
+        pagina_traduitde.put(u'{{Traduït de|'+self.idioma_original+u'|'+self.titol_original+u'|{{subst:CURRENTDAY}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTYEAR}}|'+versio[0]+u'}}\n --~~~~', u'Anskarbot incorporant la plantilla {{traduït de}} a la pàgina de discussió',minorEdit=False, force=True)
 
         print u"* AFEGINT LA TRADUCCIÓ A L'ÍNDEX DE TRADUCCIONS *"
         index = u'Usuari:Anskarbot/Traduccions'
@@ -235,7 +235,7 @@ class Plantilles:
                 try: nom,valor = parametres_ori[j].split(u'=',1)
                 except: llista_parametres.append(self.traductor(parametres_ori[j]).lower());continue
                 nom = nom.strip()
-                nom_trad = self.traductor(nom).replace('*','').lower().strip()+' = '
+                nom_trad = self.traductor(nom).replace('*','').strip()+' = '
 
                 valor_trad = self.traductor(valor).replace('*','')
                 print nom_trad
@@ -339,7 +339,7 @@ class Gestio:
         taula = taula.replace(u'|}', u' FINALMENT ')
         taula = taula.replace(u'|+', u' CAPÇALERA ')
         taula = taula.replace(u'|-', u' CANVI ')
-        taula = taula.replace(u'|', u' BARRA ')
+        taula = taula.replace(u'|', u' BARRUERAMENT ')
         taula = taula.replace(u'!', u' ADMIRACIO ')
         taula = self.traductor(taula)
         taula = taula.replace(u'*' , u'')
@@ -377,7 +377,7 @@ class Gestio:
         taula = taula.replace(u' FINALMENT ' , u'|}')
         taula = taula.replace(u' CAPÇALERA ' , u'|+')
         taula = taula.replace(u' CANVI ' , u'|-')
-        taula = taula.replace(u' BARRA ' , u'|')
+        taula = taula.replace(u' BARRUERAMENT ' , u'|')
         taula = taula.replace(u' ADMIRACIO ' , u'!')
         return taula
 
@@ -424,7 +424,7 @@ class Diccionaris:
                 dicc[valor] = nou_text
             elif valor.startswith(self.cerques[7][-1][:-3]): # Altre codi
                 print u'* PROCESSANT ALTRE CODI *'
-            elif valor.startswith(self.cerques[8][-1][:-3]): # Taules !! ENCARA FALTA
+            elif valor.startswith(self.cerques[8][-1][:-3]): # Taules
                 print u'*** PROCESSANT TAULES ***'
                 nou_text = self.gestiona_taules(nou_text)
                 dicc[valor] = nou_text
@@ -436,6 +436,8 @@ class Diccionaris:
                 print u'* PROCESSANT URLs *'
             elif valor.startswith(u' REFWZ'): #Codi entre <code></code>
                 print u'* PROCESSANT CODI *'
+            elif valor.startswith(u' REFRR'): #Caràcters estranys
+                print u'* PROCESSANT CARÂCTERS ESTRANYS *'
             elif valor.startswith(u' REFGC'): #Codi entre <gallery></gallery>
                 print u'* PROCESSANT FITXERS DE COMMONS DINS <gallery> *'
                 print nou_text
@@ -443,9 +445,9 @@ class Diccionaris:
                 text_final = u'<gallery>\n'
                 for llista_text in llista:
                     if '|' in llista_text:
-                        inicic = nou_text.find('|',finalc)
-                        finalc = nou_text.find('\n', inicic)
-                        text_peu = self.traductor(nou_text[inicic+1:finalc])
+                        inicic = llista_text.find('|',finalc)
+                        finalc = llista_text.find('\n', inicic)
+                        text_peu = self.traductor(llista_text[inicic+1:finalc])
                         text_final += llista_text.replace(llista_text[inicic+1:finalc],text_peu)
                 text_final += u'</gallery>'
                 dicc[valor] = text_final
@@ -460,10 +462,12 @@ class Diccionaris:
         except:
             print 'No hi ha pàgina regex a la wiki'
             return
-        text = re.sub(r'<!--.+-->','',text,flags=re.DOTALL)
+        text = re.sub(r'<!--.+-->','',text)
         llista = text.split(u'\n')
         print llista
+        if '' in llista: llista.remove('')
         for x in llista:
+            if ';' not in x: continue
             diccionari = x.split(u';')
             print diccionari
             valor,parametre = diccionari[0],diccionari[1]
@@ -621,12 +625,12 @@ class Text:
             self.titol_original = pagina_red.title()
             text = pagina.get()
         except wikipedia.NoPage, arg:
-            return u"No he sabut trobar la pàgina demanada. Sembla que "+str(arg[0])+u" no existeix en la viqui demanada. --~~~~"
+            return u"No he sabut trobar la pàgina demanada. Sembla que "+self.titol_original+u" no existeix en la viqui demanada. --~~~~"
         text = self.treuInterviquis(pagina,text)
         text = self.treuCategories(pagina,text)
         text = re.sub(r'%s.+\}\}\n' %self.dicc_ordena[self.idioma_original],'',text)
         text = self.errorsPre(text)
-        while text.find(u'\n\n\n') != -1:
+        while u'\n\n\n' in text:
             text = text.replace(u'\n\n\n',u'\n\n')
         text = text.replace(u"==\n",u"==\n\n")
         text = text.replace(u"\n==",u"\n\n==")
@@ -639,7 +643,7 @@ class Text:
                 continue
             capitol_ori = capitol
             cap += 1
-#            if cap < 45: # Opció de passar capítols quan
+#            if cap < 12: # Opció de passar capítols quan
 #                continue # es vol fer alguna prova sobre un capítol concret ;)
             print u"********************\n********************\n* Capítol "+str(cap)+u"/"+str(len(capitols))+u" *\n********************\n********************"
             print "&&&&&&&&&&&&&&&&&&&\n&& TEXT ORIGINAL &&\n&&&&&&&&&&&&&&&&&&&"
@@ -695,7 +699,7 @@ class Text:
             fitxers = re.findall(r'<gallery>.+</gallery>', capitol,flags=re.DOTALL)
             ncodi = 0
             for m_code in fitxers:
-                print '* CERCANT FITXERS DE COMMONS DINS <gallery>*'
+                print '* CERCANT FITXERS DE COMMONS DINS <gallery> *'
                 ncodi = str(ncodi).zfill(4)
                 valor = u' REFGC%s ' %(ncodi)
                 capitol = capitol.replace(m_code, valor)
@@ -704,6 +708,16 @@ class Text:
             if self.idioma_original == u'en' and capitol.find(u'entur') != -1:
                 capitol = self.segles(capitol)
             self.text_trad = self.cerca(capitol)
+            rareses = re.findall(ur'(\w*[ĆćĹĺŃńŔŕŚśÝýŹźÌìÂâĈĉÊêĜĝĤĥÎîĴĵÔôŜŝÛûŴŵŶŷÄäËëÖöŸÿÃãẼẽĨĩÕõŨũỸỹÇçĢģĶķĻļŅņŖŗŞşŢţĐđǤǥĦħƟɵŦŧÅåŮůǍǎČčĎďĚěǏǐǨǩĽľŇňǑǒŘřŠšŤťǓǔŽžǮǯĀāĒēĪīŌōŪūȲȳǢǣǖǘǚǜĂăĔĕĞğĬĭŎŏŬŭĊċḂḃĊċḊḋĖėḞḟĠġİṖṗṠṡṪṫŻżĄąĘęĮįǪǫŲųḌḍẸẹḤḥỊịḶḷḸḹṂṃṆṇṚṛṜṝṢṣṬṭỤụŁłØøŐőŰűƁɓƊɗƘƙĿŀÐðÞþǷƿȜȝƎƏəƐɛıȢŊŋƩʃƷʒƒſÆæĲĳǶƕŒœß]\w*),?.?', self.text_trad,flags=re.UNICODE)
+            ncodi = 0
+            for m_code in rareses:
+                print '* CERCANT CARÂCTERS ESTRANYS *'
+                ncodi = str(ncodi).zfill(4)
+                valor = u' REFRR%s ' %(ncodi)
+                self.text_trad = self.text_trad.replace(m_code, valor)
+                self.refs[valor] = m_code
+                ncodi = int(ncodi) + 1
+                print m_code
             self.ordena_diccionari(self.refs)
             self.text_trad = self.text_trad.replace(u'{', u' CLAUDATOROBERT ' )
             self.text_trad = self.text_trad.replace(u'}', u' CLAUDATORTANCAT ' )
@@ -746,6 +760,7 @@ class Text:
             text = text.lstrip()
             while text.find(u'  ') != -1:
                 text = text.replace(u'  ', u' ')
+            text = self.postTrad(text)
             text_final += text + u'\n\n' + capitol_ori + u"\n\n"
             self.refs = {}
             self.dicc_enllac = {}
@@ -759,7 +774,6 @@ class Text:
             text_final = text_final.replace(u'\n\n\n',u'\n\n')
         text_final = text_final.replace(u'==\n\n',u'==\n')
         text_final = text_final+u"\n\n==Notes de traducció==\n*Les plantilles en vermell són les que no s'han pogut trobar la corresponent plantilla en català. Això no vol dir que no existeixi, sino que no s'ha pogut trobar automàticament, ja sigui per que no hi ha el corresponent enllaç interviqui, o per que, realment, no existeix la plantilla en català. En cas que trobeu la plantilla corresponent us agrairia que li posesiu el seu enllaç interviqui a la plantilla en l'idioma original per poder trobar-la en properes traduccions. Gràcies. --~~~~\n*He optat per posar totes els possibles paràmetres que admet la plantilla en català perque és complicat encertar els paràmetres coincidents en una traducció literal. Intenteré que almenys les plantills de referènciess quedin perfectament traduïdes i amb la resta anirem poc a poc. --~~~~\n*És possible que quan estigui implementat Wikidata sigui més fàcil saber la coincidència de paràmtres originals i en català, però per ara és força complicat. --~~~~\n*Podeu comentar possibles millores en el bot de traducció en [[Usuari:Anskarbot/Errors|aquesta pàgina]]. --~~~~\n*Les paraules que el programa [[Apertium]] encara no tradueix queden registrades automàticament. Si trobeu alguna millora en la traducció podeu expresar-ho a la mateixa [[Usuari:Anskarbot/Errors|pàgina d'errors]]. --~~~~"
-        text_final = self.postTrad(text_final)
         registre = open('registres/registre-%s.txt' %self.titol_original,'w')
         registre.write(text_final.encode('utf-8'))
         registre.close()
@@ -779,10 +793,9 @@ class Text:
         enxel = re.findall(r'[eE]n (\d{1,4})',text)
         print enxel
         for data in enxel:
-            text = text.replace('en %s' %data, 'el %s' %data)
-            text = text.replace('En %s' %data, 'El %s' %data)
-        self.muntaPaginaRE(self.pagina_regex,u'ca')
-        self.muntaPaginaRE(u'regex',self.idioma_original)
+            text = text.replace(' en %s' %data, ' el %s' %data)
+            text = text.replace(' En %s' %data, ' El %s' %data)
+            text = text.replace('\nEn %s' %data, '\nEl %s' %data)
         if self.canvis_post != {}:
             text = self.errorsPost(text)
         text = self.paginaRe(text,self.commons)
@@ -917,13 +930,16 @@ class Peticions:
                 elif u'enllaços=' in self.peticions[pagina][1][n]:
                     self.tria_enllacos = True
                 elif u"regex=" in self.peticions[pagina][1][n]:
-                    self.pagina_regex = self.peticions[pagina][1].split(u'=')[1]
-            except: pass
+                    self.pagina_regex = self.peticions[pagina][1][n].split(u'=')[1]
+                    print u"S'ha demanat aquesta pàgina regex: \n* "+self.pagina_regex
+            except: continue
         if self.titol_escollit:
             print missatge+self.titol_escollit
         else:
             print u"No s'ha demanat un títol específic"
         print u"S'ha demanat conservar els enllaços originals?: \n* "+str(self.tria_enllacos)+u"\n"+56*u"*"
+        self.muntaPaginaRE(self.pagina_regex,u'ca')
+        self.muntaPaginaRE(u'regex',self.idioma_original)
 
 class Pregunta:
 
@@ -997,7 +1013,14 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
         self.canvis_post = {u"Veu també":u'Vegeu també',
                             u'i.e.':u"per exemple",
                             u'NOTRADUIR002':u'Twentieth Century Fox',
-                            u'NOTRADUIR001':u'New York Times',}
+                            u'NOTRADUIR001':u'New York Times',
+                            u" < ref":u"<ref",
+                            u"< ref":u"<ref",
+                            u" <ref ":u"<ref ",
+                            u"( ":u"(",
+                            u" )":u")",
+                            u"{{Article de qualitat}}":u'',
+                            u"{{Article bo}}":u''}
         self.canvis_pre = {u"New York Times":u" NOTRADUIR001 ",
                            u"Twentieth Century Fox":u" NOTRADUIR002 "}
 
@@ -1017,8 +1040,8 @@ class Inici(Pregunta,Peticions,Text,Interviqui,PreCercaSubst,Diccionaris,Gestio,
                         u"Fichier:" :u"Fitxer:"}
         self.dicc_ordena = {u"en" : u"{{DEFAULTSORT:",
                             u"fr" : u"{{DEFAULTSORT:",
-                            u"es" : u"",
-                            u"pt" : u"",
+                            u"es" : u"{{DEFAULTSORT:",
+                            u"pt" : u"{{DEFAULTSORT:",
                             u"oc" : u"{{DEFAULTSORT:",}
         self.titol_plantilles = {u'en' : u'Template:',
                                  u'fr' : u'Modèle:',
